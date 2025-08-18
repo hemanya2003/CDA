@@ -136,28 +136,35 @@ map.on('load', () => {
         }
       });
 
-      // ✅ Label for CDA boundary
-      map.addLayer({
-        id: 'boundary-label',
-        type: 'symbol',
-        source: 'boundary',
-        layout: {
-          'text-field': ['get', 'Name'],   // column name in your GeoJSON
-          'text-size': 16,
-          'text-anchor': 'center',
-          'text-allow-overlap': true,
-          'symbol-placement': 'point'
-        },
-        paint: {
-          'text-color': 'red',
-          'text-halo-color': '#000000',
-          'text-halo-width': 2
-        }
-      });
+    // 1️⃣ Rectangle background for labels
+map.addLayer({
+  id: 'boundary-label-bg',
+  type: 'symbol',
+  source: 'boundary',
+  layout: {
+    'icon-image': 'blank',            // we will use a simple rectangle sprite
+    'icon-size': 1.5,                 // adjust size for text
+    'icon-allow-overlap': true
+  },
+  paint: {
+    'icon-color': 'white'             // rectangle background color
+  }
+});
 
-      // ✅ Force label above everything else
-      map.moveLayer('boundary-label');
-    });
+// 2️⃣ Red text on top
+map.addLayer({
+  id: 'boundary-label',
+  type: 'symbol',
+  source: 'boundary',
+  layout: {
+    'text-field': ['get', 'Name'],
+    'text-size': 16,
+    'text-anchor': 'center',
+    'text-allow-overlap': true
+  },
+  paint: {
+    'text-color': 'red'
+  }
 });
 
 let allBuildings = [];
@@ -352,6 +359,7 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 
 
 

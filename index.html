@@ -1,44 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Cesium Viewer</title>
-    <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
-    <link
-      href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css"
-      rel="stylesheet"
-    />
-    <style>
-      html,
-      body,
-      #cesiumContainer {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="cesiumContainer"></div>
-    <script>
-      // ✅ Create Cesium viewer with terrain
-      const viewer = new Cesium.Viewer("cesiumContainer", {
-        terrain: Cesium.Terrain.fromWorldTerrain(),
-      });
+<head>
+  <meta charset="utf-8">
+  <title>Cesium 3D Buildings</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer { width:100%; height:100%; margin:0; padding:0; }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+  <script>
+    // Viewer with terrain
+    const viewer = new Cesium.Viewer("cesiumContainer", {
+      terrainProvider: Cesium.CesiumTerrainProvider.fromWorldTerrain()
+    });
 
-      // ✅ Load your GeoJSON file (make sure it's in repo root as data.geojson)
-      Cesium.GeoJsonDataSource.load("Sector6.geojson", {
-        clampToGround: true,
-      })
-        .then(function (dataSource) {
-          viewer.dataSources.add(dataSource);
-          viewer.flyTo(dataSource); // zoom to data
-        })
-        .catch(function (error) {
-          console.error("Error loading GeoJSON:", error);
-        });
-    </script>
-  </body>
+    // Load your exported GeoJSON
+    Cesium.GeoJsonDataSource.load("Sector6Final1.geojson").then((dataSource) => {
+      viewer.dataSources.add(dataSource);
+      viewer.zoomTo(dataSource);
+
+      const entities = dataSource.entities.values;
+      for (let entity of entities) {
+        if (entity.polygon) {
+          // Use "height" property (default 3 if missing)
+          let h = entity.properties.height ? entity.properties.height.getValue() : 3;
+
+          entity.polygon.extrudedHeight = h;   // 👈 makes it 3D
+          entity.polygon.material = Cesium.Color.SKYBLUE.withAlpha(0.7);
+          entity.polygon.outline = true;
+          entity.polygon.outlineColor = Cesium.Color.BLACK;
+        }
+      }
+    });
+  </script>
+</body>
 </html>

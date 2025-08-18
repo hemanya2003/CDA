@@ -100,7 +100,7 @@ const map = new maplibregl.Map({
         },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
     },
-    center: [85.854, 20.466],
+    center: [85.84, 20.478],
     zoom: 17,
     pitch: 60,
     bearing: -17,
@@ -110,6 +110,38 @@ map.addControl(new maplibregl.NavigationControl());
 
 let allBuildings = [];
 let propertyChart, complianceChart;
+  // ✅ Load CDA Boundary
+map.on('load', ()=>{
+  fetch('./CDA_Boundary.geojson')
+    .then(res => res.json())
+    .then(boundary => {
+        map.addSource('boundary', { type:'geojson', data: boundary });
+
+        // Just boundary line (ground level)
+        map.addLayer({
+          id:'boundary-line',
+          type:'line',
+          source:'boundary',
+          paint:{
+            'line-color':'#FF6600',
+            'line-width':4
+          }
+        });
+
+        // Fake 3D wall effect using extrusion along boundary
+        map.addLayer({
+          id:'boundary-wall',
+          type:'fill-extrusion',
+          source:'boundary',
+          paint:{
+            'fill-extrusion-color':'#FF6600',
+            'fill-extrusion-height':20,   // wall height
+            'fill-extrusion-opacity':0.6
+          }
+        });
+    });
+});
+
 
 // ✅ Load Buildings
 fetch('./Sector6Final1.geojson')
@@ -234,3 +266,4 @@ function resetMapView(){ map.flyTo({center:[85.854,20.466],zoom:17,pitch:60,bear
 </script>
 </body>
 </html>
+

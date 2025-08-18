@@ -235,37 +235,6 @@ map.addControl(new maplibregl.NavigationControl());
 let allBuildings = [];
 let propertyChart, complianceChart;
 
-// Helper functions for compliance popup formatting
-function getComplianceColor(value) {
-    if (!value || value === 'Unknown') return '#6c757d';
-    if (value === 'Not Applicable') return '#28a745'; // green - compliant
-    if (value === 'No rule found') return '#ffc107';   // yellow - no rule
-    return '#dc3545'; // red - violations
-}
-
-function formatComplianceStatus(status) {
-    if (!status || status === 'Unknown') return 'Unknown';
-    if (status === 'Not Applicable') return '✅ Compliant';
-    if (status === 'No rule found') return '❓ No Rule Found';
-    
-    // Format violation details
-    const violations = [];
-    if (status.includes('Coverage')) {
-        const match = status.match(/Coverage ([\d.]+)% > ([\d.]+)%/);
-        if (match) violations.push(`Coverage: ${match[1]}% (max: ${match[2]}%)`);
-    }
-    if (status.includes('FSI')) {
-        const match = status.match(/FSI ([\d.]+) > ([\d.]+)/);
-        if (match) violations.push(`FSI: ${match[1]} (max: ${match[2]})`);
-    }
-    if (status.includes('Height')) {
-        const match = status.match(/Height ([\d.]+)m > ([\d.]+)m/);
-        if (match) violations.push(`Height: ${match[1]}m (max: ${match[2]}m)`);
-    }
-    
-    return violations.length > 0 ? '❌ ' + violations.join('<br/>   ') : '❌ Non-Compliant';
-}
-
 function showError(message) {
     const errorDiv = document.getElementById('errorMessage');
     errorDiv.textContent = message;
@@ -364,40 +333,21 @@ fetch('./Sector6Final1.geojson')
           });
           console.log("Compliance counts:", counts);
 
-          // FIXED POPUP - Enhanced with proper compliance formatting
+          // Popup on click
           map.on('click', 'buildings-layer', (e) => {
               const p = e.features[0].properties;
-              
-              // Get compliance status with proper fallback
-              const complianceStatus = p.Compliance_Status || 'Unknown';
-              const formattedCompliance = formatComplianceStatus(complianceStatus);
-              
-              console.log("Popup compliance check:", complianceStatus); // Debug log
-              
-              new maplibregl.Popup({ maxWidth: '400px' })
+              new maplibregl.Popup()
                 .setLngLat(e.lngLat)
                 .setHTML(`
-                  <div style="font-family: Arial, sans-serif; font-size: 13px; line-height: 1.5;">
-                    <h4 style="margin: 0 0 10px 0; color: #333; border-bottom: 2px solid #007cba; padding-bottom: 5px;">
-                      Building Information
-                    </h4>
-                    <table style="width: 100%; border-collapse: collapse;">
-                      <tr><td style="padding: 3px 5px; font-weight: bold;">Plot No:</td><td style="padding: 3px 5px;">${p.Plot_No || "NA"}</td></tr>
-                      <tr style="background: #f8f9fa;"><td style="padding: 3px 5px; font-weight: bold;">Owner:</td><td style="padding: 3px 5px;">${p.Owner_Name || "NA"}</td></tr>
-                      <tr><td style="padding: 3px 5px; font-weight: bold;">Father/Husband:</td><td style="padding: 3px 5px;">${p.Father_Hus || "NA"}</td></tr>
-                      <tr style="background: #f8f9fa;"><td style="padding: 3px 5px; font-weight: bold;">Contact:</td><td style="padding: 3px 5px;">${p.Contact_Nu || "NA"}</td></tr>
-                      <tr><td style="padding: 3px 5px; font-weight: bold;">Property Type:</td><td style="padding: 3px 5px;">${p.Property_T || "NA"}</td></tr>
-                      <tr style="background: #f8f9fa;"><td style="padding: 3px 5px; font-weight: bold;">Occupancy:</td><td style="padding: 3px 5px;">${p.Occupancy_ || "NA"}</td></tr>
-                      <tr><td style="padding: 3px 5px; font-weight: bold;">Height:</td><td style="padding: 3px 5px;">${p.height}m (${p.floors} floors)</td></tr>
-                      <tr style="background: #f8f9fa;"><td style="padding: 3px 5px; font-weight: bold;">Area:</td><td style="padding: 3px 5px;">${p.AREA || "NA"} sq.m</td></tr>
-                    </table>
-                    <div style="margin-top: 12px; padding: 8px; border-radius: 5px; background: ${getComplianceColor(complianceStatus) + '20'}; border-left: 4px solid ${getComplianceColor(complianceStatus)};">
-                      <strong style="color: ${getComplianceColor(complianceStatus)};">Compliance Status:</strong><br/>
-                      <div style="margin-top: 5px; font-size: 12px; color: #333;">
-                        ${formattedCompliance}
-                      </div>
-                    </div>
-                  </div>
+                  <b>Plot No:</b> ${p.Plot_No || "NA"}<br/>
+                  <b>Owner:</b> ${p.Owner_Name || "NA"}<br/>
+                  <b>Father/Husband:</b> ${p.Father_Hus || "NA"}<br/>
+                  <b>Contact:</b> ${p.Contact_Nu || "NA"}<br/>
+                  <b>Occupancy:</b> ${p.Occupancy_ || "NA"}<br/>
+                  <b>Property Type:</b> ${p.Property_T || "NA"}<br/>
+                  <b>Height:</b> ${p.height}m<br/>
+                  <b>Floors:</b> ${p.floors}<br/>
+                  <b>Compliance:</b> ${p.Compliance_Status || "NA"}
                 `)
                 .addTo(map);
           });
@@ -654,3 +604,4 @@ function resetMapView() {
 </script>
 </body>
 </html>
+

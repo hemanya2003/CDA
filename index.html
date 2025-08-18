@@ -96,14 +96,21 @@ let propertyChart, complianceChart;
 fetch('./Sector6Final1.geojson')
   .then(res => res.json())
   .then(data => {
+      console.log("First feature all properties:", data.features[0].properties);
+      
       allBuildings = data.features.map(f=>{
           f.properties.height = parseFloat(f.properties.height_m || f.properties.height || 3);
           f.properties.floors = parseInt(f.properties.floors || 1);
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
           
-          // ✅ Use the actual Compliance field from your data
-          f.properties.compliance = f.properties.Compliance || "NA";
+          // Try to find the compliance field - check all possible variations
+          f.properties.compliance = f.properties.Compliance || 
+                                   f.properties.compliance || 
+                                   f.properties.COMPLIANCE ||
+                                   f.properties.Complianc ||
+                                   f.properties['Compliance'] ||
+                                   "NOT_FOUND";
           return f;
       });
       map.on('load', ()=>{
@@ -125,6 +132,12 @@ fetch('./Sector6Final1.geojson')
           // ✅ Show stats & charts on load
           updateStatistics(allBuildings);
           updateCharts(allBuildings);
+          
+          // Debug: Check what compliance values we have
+          console.log("Sample compliance values:");
+          allBuildings.slice(0, 10).forEach((building, index) => {
+              console.log(`Building ${index}: compliance = "${building.properties.compliance}"`);
+          });
 
           // ✅ Popup on click
           map.on('click', 'buildings-layer', (e) => {
@@ -262,13 +275,26 @@ function highlightByPropertyType() {
     ]
   );
 }
-// ✅ Fixed compliance highlighting function - Green for "Not Applicable", Red for all violations
+// ✅ Fixed compliance highlighting function with comprehensive debugging
 function highlightByCompliance(){
+    // Debug: Check all unique compliance values
+    const complianceValues = allBuildings.map(b => b.properties.compliance);
+    const uniqueValues = [...new Set(complianceValues)];
+    console.log("All unique compliance values found:", uniqueValues);
+    console.log("Total buildings:", allBuildings.length);
+    
+    // Count each value
+    const counts = {};
+    complianceValues.forEach(val => {
+        counts[val] = (counts[val] || 0) + 1;
+    });
+    console.log("Compliance value counts:", counts);
+    
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
         ['==',['get','compliance'],'Not Applicable'],'green',
-        ['==',['get','compliance'],'No rule found'],'yellow',  // Optional: different color for "No rule found"
-        'red'  // All other values (violations) in red
+        ['==',['get','compliance'],'No rule found'],'yellow',
+        'red'
       ]);
 }
 function resetMapView(){

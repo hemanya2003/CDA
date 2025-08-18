@@ -25,13 +25,26 @@
       const entities = dataSource.entities.values;
       for (let entity of entities) {
         if (entity.polygon) {
-          // Use "height" property (default 3 if missing)
           let h = entity.properties.height ? entity.properties.height.getValue() : 3;
 
-          entity.polygon.extrudedHeight = h;   // 👈 makes it 3D
-          entity.polygon.material = Cesium.Color.SKYBLUE.withAlpha(0.7);
-          entity.polygon.outline = true;
-          entity.polygon.outlineColor = Cesium.Color.BLACK;
+          try {
+            let hierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
+            let positions = hierarchy.positions;
+
+            // Skip degenerate polygons
+            if (positions.length > 2) {
+              entity.polygon.extrudedHeight = h;
+              entity.polygon.material = Cesium.Color.SKYBLUE.withAlpha(0.7);
+              entity.polygon.outline = true;
+              entity.polygon.outlineColor = Cesium.Color.BLACK;
+            } else {
+              console.warn("Skipping degenerate polygon", entity.id);
+              entity.show = false;
+            }
+          } catch (e) {
+            console.warn("Invalid polygon skipped:", entity.id, e);
+            entity.show = false;
+          }
         }
       }
     });

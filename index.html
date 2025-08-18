@@ -99,8 +99,8 @@ const map = new maplibregl.Map({
         },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
     },
-    center: [85.854, 20.466],
-    zoom: 17,
+    center: [85.84, 20.477],
+    zoom: 20,
     pitch: 60,
     bearing: -17,
     antialias: true
@@ -119,8 +119,8 @@ map.on('load', () => {
         type: 'line',
         source: 'boundary',
         paint: {
-          'line-color': '#FF6600',
-          'line-width': 4
+          'line-color': 'black',
+          'line-width': 8
         }
       });
 
@@ -132,7 +132,7 @@ map.on('load', () => {
         paint: {
           'fill-extrusion-color': '#FF6600',
           'fill-extrusion-height': 20,   // wall height
-          'fill-extrusion-opacity': 0.6
+          'fill-extrusion-opacity': 0
         }
       });
 
@@ -143,14 +143,14 @@ map.on('load', () => {
         source: 'boundary',
         layout: {
           'text-field': ['get', 'Name'],   // column name in your GeoJSON
-          'text-size': 16,
+          'text-size': 25,
           'text-anchor': 'center',
           'text-allow-overlap': true,
           'symbol-placement': 'point'
         },
         paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': '#000000',
+          'text-color': 'red',
+          'text-halo-color': 'red',
           'text-halo-width': 2
         }
       });
@@ -352,5 +352,6 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 
 

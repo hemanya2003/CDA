@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Cesium 3D Buildings Dashboard</title>
-<script src="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Cesium.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<title>3D Building Dashboard - MapLibre</title>
+<link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
 <style>
-html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
 #container { display: flex; width: 100%; height: 100%; }
 #sidePanel { width: 350px; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
-#cesiumContainer { flex: 1; height: 100%; }
+#map { flex: 1; height: 100%; }
 .panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
 .panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
 .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
@@ -24,120 +24,218 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.
 </style>
 </head>
 <body>
+
 <div id="container">
   <div id="sidePanel">
-    <h2 style="text-align: center; margin-bottom: 30px; color: #fff;">🏢 Building Dashboard</h2>
-
+    <h2 style="text-align:center; margin-bottom:30px; color:#fff;">🏢 Building Dashboard</h2>
+    
+    <!-- Statistics -->
     <div class="panel-section">
       <div class="panel-title">📊 Statistics</div>
       <div id="stats">
-        <div class="stat-item"><span>Total Buildings:</span><span id="totalBuildings">Loading...</span></div>
-        <div class="stat-item"><span>Avg Height:</span><span id="avgHeight">Loading...</span></div>
-        <div class="stat-item"><span>Max Height:</span><span id="maxHeight">Loading...</span></div>
-        <div class="stat-item"><span>Total Area:</span><span id="totalArea">Loading...</span></div>
+        <div class="stat-item"><span>Total Buildings:</span><span id="totalBuildings">0</span></div>
+        <div class="stat-item"><span>Avg Height:</span><span id="avgHeight">0m</span></div>
+        <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
+        <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
       </div>
     </div>
 
+    <!-- Color Legend -->
     <div class="panel-section">
       <div class="panel-title">🎨 Height Color Code</div>
-      <div class="color-legend"><div class="color-box" style="background: #00ff00;"></div><span>3m</span></div>
-      <div class="color-legend"><div class="color-box" style="background: #ccff00;"></div><span>6m</span></div>
-      <div class="color-legend"><div class="color-box" style="background: #ffaa00;"></div><span>9m</span></div>
-      <div class="color-legend"><div class="color-box" style="background: #ff4444;"></div><span>12m+</span></div>
+      <div class="color-legend"><div class="color-box" style="background:#00ff00;"></div><span>3m</span></div>
+      <div class="color-legend"><div class="color-box" style="background:#ccff00;"></div><span>6m</span></div>
+      <div class="color-legend"><div class="color-box" style="background:#ffaa00;"></div><span>9m</span></div>
+      <div class="color-legend"><div class="color-box" style="background:#ff4444;"></div><span>12m+</span></div>
     </div>
 
+    <!-- Compliance Legend -->
     <div class="panel-section">
-      <div class="panel-title">✅ Compliance Legend</div>
-      <div class="color-legend"><div class="color-box" style="background: gray;"></div>Not Applicable</div>
-      <div class="color-legend"><div class="color-box" style="background: green;"></div>Compliant</div>
-      <div class="color-legend"><div class="color-box" style="background: orange;"></div>Partial Compliance</div>
-      <div class="color-legend"><div class="color-box" style="background: red;"></div>Non-compliant</div>
+      <div class="panel-title">✅ Compliance</div>
+      <div class="color-legend"><div class="color-box" style="background:gray;"></div>Not Applicable</div>
+      <div class="color-legend"><div class="color-box" style="background:green;"></div>Compliant</div>
+      <div class="color-legend"><div class="color-box" style="background:orange;"></div>Partial Compliance</div>
+      <div class="color-legend"><div class="color-box" style="background:red;"></div>Non-compliant</div>
     </div>
 
+    <!-- Filters -->
     <div class="panel-section">
       <div class="panel-title">🔍 Spatial Queries</div>
       <label>Property Type:</label>
-      <select id="propertyTypeFilter">
-        <option value="">All Types</option>
-        <option value="Commercial">Commercial</option>
-        <option value="Institutional">Institutional</option>
-        <option value="Vacant">Vacant</option>
-      </select>
+      <select id="propertyTypeFilter"><option value="">All Types</option><option>Commercial</option><option>Institutional</option><option>Vacant</option></select>
       <label>Building Use:</label>
-      <select id="buildingUseFilter">
-        <option value="">All Uses</option>
-        <option value="House">House</option>
-        <option value="Shop">Shop</option>
-        <option value="Warehouse">Warehouse</option>
-      </select>
-      <label>Height Range (meters):</label>
+      <select id="buildingUseFilter"><option value="">All Uses</option><option>House</option><option>Shop</option><option>Warehouse</option></select>
+      <label>Height Range:</label>
       <div class="filter-controls">
-        <input type="number" id="minHeight" placeholder="Min" min="0">
-        <input type="number" id="maxHeight" placeholder="Max" min="0">
+        <input type="number" id="minHeight" placeholder="Min">
+        <input type="number" id="maxHeight" placeholder="Max">
       </div>
       <label>Floor Count:</label>
-      <select id="floorsFilter">
-        <option value="">All Floors</option>
-        <option value="1">1 Floor</option>
-        <option value="2">2 Floors</option>
-        <option value="3">3+ Floors</option>
-      </select>
+      <select id="floorsFilter"><option value="">All Floors</option><option value="1">1 Floor</option><option value="2">2 Floors</option><option value="3">3+ Floors</option></select>
       <button onclick="applyFilters()">🔎 Apply Filters</button>
       <button onclick="resetFilters()">🔄 Reset All</button>
     </div>
 
+    <!-- Analysis -->
     <div class="panel-section">
       <div class="panel-title">📈 Quick Analysis</div>
       <button onclick="highlightTallBuildings()">🏗️ Show Tall Buildings</button>
       <button onclick="highlightByPropertyType()">🏢 Group by Property Type</button>
       <button onclick="showFloodProne()">🌊 Flood Prone Areas</button>
       <button onclick="highlightByCompliance()">✅ Compliance Status</button>
-      <button onclick="resetView()">🌍 Reset View</button>
+      <button onclick="resetMapView()">🌍 Reset View</button>
     </div>
 
-    <div class="panel-section" id="selectedInfo" style="display: none;">
+    <!-- Selected Building Info -->
+    <div class="panel-section" id="selectedInfo" style="display:none;">
       <div class="panel-title">📋 Selected Building</div>
       <div id="buildingDetails"></div>
     </div>
+
   </div>
 
-  <div id="cesiumContainer"></div>
+  <!-- Map -->
+  <div id="map"></div>
 </div>
 
 <script>
-Cesium.Ion.defaultAccessToken = 'YOUR_ION_TOKEN_HERE';
-
-// MapTiler base map
-viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider: new Cesium.UrlTemplateImageryProvider({
-        url: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=6TYA91HhQPjMXU651wBM',
-        credit: 'MapTiler'
-    }),
-    baseLayerPicker: false,
-    terrainProvider: Cesium.createWorldTerrain(),
-    timeline: false,
-    animation: false
+const map = new maplibregl.Map({
+    container: 'map',
+    style: `https://api.maptiler.com/maps/streets/style.json?key=6TYA91HhQPjMXU651wBM`,
+    center: [85.854, 20.466], // replace with your area
+    zoom: 17,
+    pitch: 60,
+    bearing: -17,
+    antialias: true
 });
 
-// Globals
-let dataSource, allBuildings=[], filteredBuildings=[];
+// Add navigation controls
+map.addControl(new maplibregl.NavigationControl());
 
-// Smooth gradient color based on height
-function getColorByHeight(height){
-    if(height<=3) return Cesium.Color.fromHsl(0.33,1,0.5); // Green
-    if(height<=6) return Cesium.Color.fromHsl(0.25,1,0.5); // Yellow-Green
-    if(height<=9) return Cesium.Color.fromHsl(0.13,1,0.5); // Orange
-    return Cesium.Color.fromHsl(0,1,0.5); // Red
+// Load your GeoJSON
+let allBuildings = [];
+fetch('./Sector6Final1.geojson')
+  .then(res => res.json())
+  .then(data => {
+    allBuildings = data.features.map(f=>{
+        f.properties.height = parseFloat(f.properties.height_m || f.properties.height || 3);
+        f.properties.floors = parseInt(f.properties.floors || 1);
+        return f;
+    });
+
+    map.on('load', ()=>{
+        map.addSource('buildings', { type:'geojson', data: { type:'FeatureCollection', features: allBuildings } });
+
+        map.addLayer({
+            id: 'buildings-layer',
+            type: 'fill-extrusion',
+            source: 'buildings',
+            paint: {
+                'fill-extrusion-color': [
+                    'interpolate', ['linear'], ['get','height'],
+                    3, '#00ff00',
+                    6, '#ccff00',
+                    9, '#ffaa00',
+                    12, '#ff4444'
+                ],
+                'fill-extrusion-height': ['*', ['get','height'], 5], // scale for better visualization
+                'fill-extrusion-base': 0,
+                'fill-extrusion-opacity': 0.8
+            }
+        });
+
+        updateStatistics();
+    });
+  });
+
+function updateStatistics(){
+    const heights = allBuildings.map(b=>b.properties.height);
+    const total = allBuildings.length;
+    const avg = (heights.reduce((a,b)=>a+b,0)/total).toFixed(1);
+    const maxH = Math.max(...heights);
+    const totalArea = allBuildings.reduce((a,b)=>a+(parseFloat(b.properties.AREA)||0),0).toFixed(1);
+
+    document.getElementById('totalBuildings').textContent = total;
+    document.getElementById('avgHeight').textContent = avg+'m';
+    document.getElementById('maxHeight').textContent = maxH+'m';
+    document.getElementById('totalArea').textContent = totalArea+' sq.m';
 }
 
-function getColorByPropertyType(type){
-    switch(type){
-        case 'Commercial': return Cesium.Color.fromCssColorString('#ff6b6b');
-        case 'Institutional': return Cesium.Color.fromCssColorString('#4ecdc4');
-        case 'Vacant': return Cesium.Color.fromCssColorString('#45b7d1');
-        default: return Cesium.Color.fromCssColorString('#96ceb4');
-    }
+// FILTERS
+function applyFilters(){
+    const propType = document.getElementById('propertyTypeFilter').value;
+    const buildingUse = document.getElementById('buildingUseFilter').value;
+    const minH = parseFloat(document.getElementById('minHeight').value)||0;
+    const maxH = parseFloat(document.getElementById('maxHeight').value)||1000;
+    const floors = document.getElementById('floorsFilter').value;
+
+    const filtered = allBuildings.filter(b=>{
+        let h = b.properties.height;
+        let matches = (!propType || b.properties.Property_T===propType)
+            && (!buildingUse || b.properties.Building_U===buildingUse)
+            && h>=minH && h<=maxH
+            && (!floors || (floors==='1' && b.properties.floors===1) || (floors==='2' && b.properties.floors===2) || (floors==='3' && b.properties.floors>=3));
+        return matches;
+    });
+
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: filtered });
+    updateStatistics();
 }
 
-// Load GeoJSON
-Cesium.GeoJsonDataSource
+function resetFilters(){
+    document.getElementById('propertyTypeFilter').value='';
+    document.getElementById('buildingUseFilter').value='';
+    document.getElementById('minHeight').value='';
+    document.getElementById('maxHeight').value='';
+    document.getElementById('floorsFilter').value='';
+
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: allBuildings });
+    updateStatistics();
+}
+
+// Quick Analysis examples
+function highlightTallBuildings(){
+    const filtered = allBuildings.filter(b=>b.properties.height>=12);
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: filtered });
+}
+function highlightByPropertyType(){
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: allBuildings });
+}
+function showFloodProne(){
+    const filtered = allBuildings.filter(b=>b.properties.Flood_Pron==='Yes');
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: filtered });
+}
+function highlightByCompliance(){
+    const filtered = allBuildings.filter(b=>['Non-compliant','Partial Compliance'].includes(b.properties.Compliance));
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: filtered });
+}
+function resetMapView(){
+    map.getSource('buildings').setData({ type:'FeatureCollection', features: allBuildings });
+    map.flyTo({ center: [85.854,20.466], zoom:17, pitch:60, bearing:-17 });
+}
+
+// CLICK EVENT
+map.on('click', 'buildings-layer', function(e){
+    const props = e.features[0].properties;
+    document.getElementById('selectedInfo').style.display='block';
+    document.getElementById('buildingDetails').innerHTML = `
+        <div style="font-size:12px;">
+            <strong>Plot No:</strong> ${props.Plot_No||'N/A'}<br>
+            <strong>Owner:</strong> ${props.Owner_Name||'N/A'}<br>
+            <strong>Height:</strong> ${props.height}m<br>
+            <strong>Floors:</strong> ${props.floors}<br>
+            <strong>Area:</strong> ${props.AREA||0} sq.m<br>
+            <strong>Property Type:</strong> ${props.Property_T||'N/A'}<br>
+            <strong>Building Use:</strong> ${props.Building_U||'N/A'}<br>
+            <strong>Flood Prone:</strong> ${props.Flood_Pron||'N/A'}<br>
+            <strong>Compliance:</strong> ${props.Compliance||'N/A'}
+        </div>
+    `;
+});
+
+map.on('mouseenter','buildings-layer',()=>map.getCanvas().style.cursor='pointer');
+map.on('mouseleave','buildings-layer',()=>map.getCanvas().style.cursor='default');
+</script>
+
+</body>
+</html>

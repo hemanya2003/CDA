@@ -12,12 +12,26 @@
 <body>
   <div id="cesiumContainer"></div>
   <script>
-    // Viewer with terrain
+    // Utility: remove consecutive duplicate points
+    function removeDuplicatePoints(positions) {
+      if (!positions || positions.length < 2) return positions;
+      let unique = [positions[0]];
+      for (let i = 1; i < positions.length; i++) {
+        let p = positions[i];
+        let prev = unique[unique.length - 1];
+        if (p.x !== prev.x || p.y !== prev.y || p.z !== prev.z) {
+          unique.push(p);
+        }
+      }
+      return unique;
+    }
+
+    // Initialize Cesium viewer with World Terrain
     const viewer = new Cesium.Viewer("cesiumContainer", {
       terrainProvider: Cesium.createWorldTerrain()
     });
 
-    // Load your exported GeoJSON
+    // Load GeoJSON
     Cesium.GeoJsonDataSource.load("Sector6Final1.geojson").then((dataSource) => {
       viewer.dataSources.add(dataSource);
       viewer.zoomTo(dataSource);
@@ -28,17 +42,19 @@
           let h = entity.properties.height ? entity.properties.height.getValue() : 3;
 
           try {
+            // Get polygon positions
             let hierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
-            let positions = hierarchy.positions;
+            let positions = removeDuplicatePoints(hierarchy.positions);
 
-            // Skip degenerate polygons
+            // Only extrude valid polygons
             if (positions.length > 2) {
+              entity.polygon.hierarchy = new Cesium.PolygonHierarchy(positions);
               entity.polygon.extrudedHeight = h;
               entity.polygon.material = Cesium.Color.SKYBLUE.withAlpha(0.7);
               entity.polygon.outline = true;
               entity.polygon.outlineColor = Cesium.Color.BLACK;
             } else {
-              console.warn("Skipping degenerate polygon", entity.id);
+              console.warn("Skipping degenerate polygon:", entity.id);
               entity.show = false;
             }
           } catch (e) {
@@ -47,6 +63,8 @@
           }
         }
       }
+    }).catch((err) => {
+      console.error("Failed to load GeoJSON:", err);
     });
   </script>
 </body>

@@ -292,8 +292,8 @@ function highlightByCompliance(){
     
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
-        ['==',['get','compliance'],'Not Applicable'],'green',
-        ['==',['get','compliance'],'No rule found'],'yellow',
+        ['==',['get','Compliance'],'Not Applicable'],'green',
+        ['==',['get','Compliance'],'No rule found'],'yellow',
         'red'
       ]);
 }
@@ -306,3 +306,4 @@ function resetMapView(){
 </script>
 </body>
 </html>
+

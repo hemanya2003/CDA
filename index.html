@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>3D Building Dashboard - MapLibre + OSM</title>
+<title>3D Building Dashboard - OSM + MapLibre</title>
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
 <style>
-html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
-#container { display: flex; width: 100%; height: 100%; }
-#sidePanel { width: 350px; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
-#map { flex: 1; height: 100%; }
-.panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
-.panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
-.stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
-.color-legend { display: flex; align-items: center; margin-bottom: 8px; }
-.color-box { width: 20px; height: 20px; border-radius: 3px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.3); }
-input, select, button { width: 100%; padding: 8px; margin-bottom: 10px; border: none; border-radius: 5px; font-size: 14px; }
-button { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
-button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-.filter-controls { display: flex; gap: 10px; }
-.filter-controls input { flex: 1; }
-#stats { font-size: 12px; }
+html, body { margin:0; padding:0; height:100%; width:100%; font-family: Arial,sans-serif;}
+#container { display:flex; width:100%; height:100%; }
+#sidePanel { width:350px; height:100%; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:20px; box-sizing:border-box; overflow-y:auto; box-shadow:2px 0 10px rgba(0,0,0,0.3); }
+#map { flex:1; height:100%; }
+.panel-section { margin-bottom:25px; background: rgba(255,255,255,0.1); padding:15px; border-radius:10px; backdrop-filter:blur(10px);}
+.panel-title { font-size:18px; font-weight:bold; margin-bottom:15px; color:#fff; border-bottom:2px solid rgba(255,255,255,0.3); padding-bottom:8px;}
+.stat-item { display:flex; justify-content:space-between; margin-bottom:10px; padding:8px; background:rgba(255,255,255,0.1); border-radius:5px;}
+.color-legend { display:flex; align-items:center; margin-bottom:8px; }
+.color-box { width:20px; height:20px; border-radius:3px; margin-right:10px; border:1px solid rgba(255,255,255,0.3);}
+input, select, button { width:100%; padding:8px; margin-bottom:10px; border:none; border-radius:5px; font-size:14px; }
+button { background:linear-gradient(45deg,#FF6B6B,#4ECDC4); color:white; cursor:pointer; font-weight:bold; transition:0.2s;}
+button:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,0,0,0.3);}
+.filter-controls { display:flex; gap:10px; }
+.filter-controls input { flex:1; }
+#stats { font-size:12px;}
+#infoBox { background:rgba(0,0,0,0.6); color:#fff; padding:10px; border-radius:8px; position:absolute; bottom:20px; left:20px; max-width:300px; display:none; }
 </style>
 </head>
 <body>
@@ -53,117 +54,94 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.
     <div class="panel-section">
       <div class="panel-title">✅ Compliance</div>
       <div class="color-legend"><div class="color-box" style="background:gray;"></div>Not Applicable</div>
-      <div class="color-legend"><div class="color-box" style="background:green;"></div>Compliant</div>
-      <div class="color-legend"><div class="color-box" style="background:orange;"></div>Partial Compliance</div>
-      <div class="color-legend"><div class="color-box" style="background:red;"></div>Non-compliant</div>
-    </div>
-
-    <!-- Filters -->
-    <div class="panel-section">
-      <div class="panel-title">🔍 Spatial Queries</div>
-      <label>Property Type:</label>
-      <select id="propertyTypeFilter"><option value="">All Types</option><option>Commercial</option><option>Institutional</option><option>Vacant</option></select>
-      <label>Building Use:</label>
-      <select id="buildingUseFilter"><option value="">All Uses</option><option>House</option><option>Shop</option><option>Warehouse</option></select>
-      <label>Height Range:</label>
-      <div class="filter-controls">
-        <input type="number" id="minHeight" placeholder="Min">
-        <input type="number" id="maxHeight" placeholder="Max">
-      </div>
-      <label>Floor Count:</label>
-      <select id="floorsFilter"><option value="">All Floors</option><option value="1">1 Floor</option><option value="2">2 Floors</option><option value="3">3+ Floors</option></select>
-      <button onclick="applyFilters()">🔎 Apply Filters</button>
-      <button onclick="resetFilters()">🔄 Reset All</button>
+      <div class="color-legend"><div class="color-box" style="background:red;"></div>Violations</div>
     </div>
 
     <!-- Analysis -->
     <div class="panel-section">
       <div class="panel-title">📈 Quick Analysis</div>
       <button onclick="highlightTallBuildings()">🏗️ Show Tall Buildings</button>
-      <button onclick="highlightByPropertyType()">🏢 Group by Property Type</button>
       <button onclick="showFloodProne()">🌊 Flood Prone Areas</button>
       <button onclick="highlightByCompliance()">✅ Compliance Status</button>
       <button onclick="resetMapView()">🌍 Reset View</button>
     </div>
-
-    <!-- Selected Building Info -->
-    <div class="panel-section" id="selectedInfo" style="display:none;">
-      <div class="panel-title">📋 Selected Building</div>
-      <div id="buildingDetails"></div>
-    </div>
-
   </div>
 
-  <!-- Map -->
   <div id="map"></div>
+  <div id="infoBox"></div>
 </div>
 
 <script>
-// Initialize MapLibre with OpenStreetMap raster tiles
 const map = new maplibregl.Map({
     container: 'map',
-    style: {
-        version: 8,
-        sources: {
-            osm: {
-                type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                attribution: '© OpenStreetMap contributors'
-            }
-        },
-        layers: [
-            { id: 'osm', type: 'raster', source: 'osm' }
-        ]
-    },
+    style: {version:8,sources:{osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'}},layers:[{id:'osm',type:'raster',source:'osm'}]},
     center: [85.854, 20.466],
     zoom: 17,
     pitch: 60,
     bearing: -17,
     antialias: true
 });
-map.dragRotate.enable();
+
+// enable rotation using mouse wheel button (middle click)
+map.dragRotate.disable();
 map.touchZoomRotate.enableRotation();
 map.addControl(new maplibregl.NavigationControl());
 
-// Load GeoJSON buildings
-let allBuildings = [];
-fetch('./Sector6Final1.geojson')
-  .then(res => res.json())
-  .then(data => {
-      allBuildings = data.features.map(f=>{
-          f.properties.height = parseFloat(f.properties.height_m || f.properties.height || 3);
-          f.properties.floors = parseInt(f.properties.floors || 1);
-          return f;
-      });
-      map.on('load', ()=>{
-          map.addSource('buildings', { type:'geojson', data:{ type:'FeatureCollection', features: allBuildings } });
-          map.addLayer({
-              id:'buildings-layer',
-              type:'fill-extrusion',
-              source:'buildings',
-              paint:{
-                  'fill-extrusion-color':['interpolate', ['linear'], ['get','height'],
-                      3,'lightgray',
-                      6,'royalblue',
-                      9,'lightblue',
-                      12,'red'
-                  ],
-                  'fill-extrusion-height':['*',['get','height'],1.2],
-                  'fill-extrusion-base':0,
-                  'fill-extrusion-opacity':0.9
-              }
-          });
-          updateStatistics();
-      });
-  });
+map.on('mousedown', (e) => {
+    if (e.originalEvent.button === 1) { // middle mouse
+        map.dragRotate.enable();
+    }
+});
+map.on('mouseup', () => {
+    map.dragRotate.disable();
+});
 
-// Statistics
+let allBuildings = [];
+fetch('./Sector6Final1.geojson').then(res=>res.json()).then(data=>{
+    allBuildings = data.features.map(f=>{
+        f.properties.height = parseFloat(f.properties.height_m||f.properties.height||3);
+        f.properties.compliance = f.properties.Compliance || "Not Applicable";
+        f.properties.Flood_Pron = f.properties.Flood_Pron || "No";
+        return f;
+    });
+    map.on('load',()=>{
+        map.addSource('buildings',{type:'geojson',data:{type:'FeatureCollection',features:allBuildings}});
+        map.addLayer({
+            id:'buildings-layer',
+            type:'fill-extrusion',
+            source:'buildings',
+            paint:{
+                'fill-extrusion-color':['interpolate', ['linear'], ['get','height'],
+                    3,'lightgray',
+                    6,'royalblue',
+                    9,'lightblue',
+                    12,'red'
+                ],
+                'fill-extrusion-height':['*',['get','height'],1],
+                'fill-extrusion-opacity':0.9
+            }
+        });
+        updateStatistics();
+
+        // click event to show building info
+        map.on('click','buildings-layer',(e)=>{
+            const props = e.features[0].properties;
+            document.getElementById('infoBox').style.display='block';
+            document.getElementById('infoBox').innerHTML = `
+                <b>Building Info</b><br/>
+                Height: ${props.height} m<br/>
+                Compliance: ${props.compliance}<br/>
+                Flood Prone: ${props.Flood_Pron}
+            `;
+        });
+    });
+});
+
 function updateStatistics(){
     const heights = allBuildings.map(b=>b.properties.height);
     const total = allBuildings.length;
-    const avg = total>0 ? (heights.reduce((a,b)=>a+b,0)/total).toFixed(1):0;
-    const maxH = total>0 ? Math.max(...heights):0;
+    const avg = total>0?(heights.reduce((a,b)=>a+b,0)/total).toFixed(1):0;
+    const maxH = total>0?Math.max(...heights):0;
     document.getElementById('totalBuildings').innerText = total;
     document.getElementById('avgHeight').innerText = avg+'m';
     document.getElementById('maxHeight').innerText = maxH+'m';
@@ -171,9 +149,46 @@ function updateStatistics(){
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
 }
 
-// Filters and Analysis functions (you can implement similar to previous code)
-// ...
+// Show tall buildings
+function highlightTallBuildings(){ 
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['case',['>=',['get','height'],12],'red','lightgray']
+    ); 
+}
 
+// Show compliance
+function highlightByCompliance(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['match',['get','compliance'],
+            'Not Applicable','gray',
+            /* default */ 'red'
+        ]
+    );
+}
+
+// Show flood prone
+function showFloodProne(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['match',['get','Flood_Pron'],
+            'Yes','blue',
+            /* default */ 'gray'
+        ]
+    );
+}
+
+// Reset
+function resetMapView(){ 
+    map.flyTo({center:[85.854,20.466],zoom:17,bearing:-17,pitch:60});
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['interpolate',['linear'],['get','height'],
+            3,'lightgray',
+            6,'royalblue',
+            9,'lightblue',
+            12,'red'
+        ]
+    );
+    document.getElementById('infoBox').style.display='none';
+}
 </script>
 </body>
 </html>

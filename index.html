@@ -16,14 +16,7 @@ html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Aria
 .panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
 .panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
 .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
-.color-legend { display: flex; align-items: center; margin-bottom: 8px; }
-.color-box { width: 20px; height: 20px; border-radius: 3px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.3); }
-input, select, button { width: 100%; padding: 8px; margin-bottom: 10px; border: none; border-radius: 5px; font-size: 14px; }
-button { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
-button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-.filter-controls { display: flex; gap: 10px; }
-.filter-controls input { flex: 1; }
-#stats { font-size: 12px; }
+canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
 </style>
 </head>
 <body>
@@ -39,8 +32,9 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.
         <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
         <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
       </div>
-      <!-- ✅ Pie chart added here -->
-      <canvas id="propertyChart" style="margin-top:15px; background:#fff; border-radius:8px; padding:10px;"></canvas>
+      <!-- ✅ Pie charts -->
+      <canvas id="propertyChart"></canvas>
+      <canvas id="complianceChart"></canvas>
     </div>
 
     <!-- Filters -->
@@ -96,7 +90,7 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl());
 
 let allBuildings = [];
-let propertyChart; // ✅ chart instance
+let propertyChart, complianceChart;
 
 fetch('./Sector6Final1.geojson')
   .then(res => res.json())
@@ -125,7 +119,7 @@ fetch('./Sector6Final1.geojson')
               }
           });
           updateStatistics(allBuildings);
-          updatePieChart(allBuildings); // ✅ show chart on load
+          updateCharts(allBuildings); // ✅ show charts on load
       });
   });
 
@@ -141,29 +135,35 @@ function updateStatistics(features){
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
 }
 
-// ✅ Pie chart update function
-function updatePieChart(features){
+// ✅ Combined chart update
+function updateCharts(features){
+    // --- Property type ---
     const counts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
     features.forEach(f=>{
         const t = f.properties.Property_T;
         if(counts[t]!==undefined){ counts[t]++; }
     });
-
-    const ctx = document.getElementById('propertyChart').getContext('2d');
-    if(propertyChart) propertyChart.destroy(); // clear old chart
-    propertyChart = new Chart(ctx, {
+    const ctx1 = document.getElementById('propertyChart').getContext('2d');
+    if(propertyChart) propertyChart.destroy();
+    propertyChart = new Chart(ctx1, {
         type:'pie',
-        data:{
-            labels:Object.keys(counts),
-            datasets:[{
-                data:Object.values(counts),
-                backgroundColor:['red','green','grey','brown','purple']
-            }]
-        },
-        options:{
-            responsive:true,
-            plugins:{ legend:{ position:'bottom', labels:{ color:'black' } } }
-        }
+        data:{ labels:Object.keys(counts), datasets:[{ data:Object.values(counts),
+            backgroundColor:['red','green','grey','brown','purple'] }] },
+        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+    });
+
+    // --- Compliance ---
+    let na=0, others=0;
+    features.forEach(f=>{
+        if(f.properties.compliance==="Not Applicable"){ na++; }
+        else { others++; }
+    });
+    const ctx2 = document.getElementById('complianceChart').getContext('2d');
+    if(complianceChart) complianceChart.destroy();
+    complianceChart = new Chart(ctx2, {
+        type:'pie',
+        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['green','red'] }] },
+        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
     });
 }
 
@@ -188,7 +188,7 @@ function applyFilters(){
 
     map.getSource('buildings').setData({type:'FeatureCollection',features:filtered});
     updateStatistics(filtered);
-    updatePieChart(filtered); // ✅ update chart with filtered
+    updateCharts(filtered); // ✅ update both charts
 }
 
 function resetFilters(){
@@ -199,7 +199,7 @@ function resetFilters(){
     document.getElementById('floorsFilter').value="";
     map.getSource('buildings').setData({type:'FeatureCollection',features:allBuildings});
     updateStatistics(allBuildings);
-    updatePieChart(allBuildings); // ✅ reset chart
+    updateCharts(allBuildings); // ✅ reset both
 }
 
 function highlightTallBuildings(){

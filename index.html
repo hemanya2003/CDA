@@ -34,14 +34,16 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
   <div id="sidePanel">
     <h2 style="text-align:center; margin-bottom:30px;">🏢 CDA Dashboard</h2>
     <!-- Statistics -->
-    <div class="panel-section">
-      <div class="panel-title">📊 Statistics</div>
-      <div id="stats">
-        <div class="stat-item"><span>Total Buildings:</span><span id="totalBuildings">0</span></div>
-        <div class="stat-item"><span>Avg Height:</span><span id="avgHeight">0m</span></div>
-        <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
-        <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
-      </div>
+ <div class="panel-section">
+  <div class="panel-title">📊 Building Types</div>
+  <div id="stats">
+    <div class="stat-item"><span>Commercial:</span><span id="statCommercial">0</span></div>
+    <div class="stat-item"><span>Institutional:</span><span id="statInstitutional">0</span></div>
+    <div class="stat-item"><span>Mixed Use:</span><span id="statMixed">0</span></div>
+    <div class="stat-item"><span>Residential:</span><span id="statResidential">0</span></div>
+    <div class="stat-item"><span>Vacant:</span><span id="statVacant">0</span></div>
+  </div>
+</div>
       <!-- ✅ Two pie charts stacked -->
       <canvas id="propertyChart"></canvas>
       <canvas id="complianceChart"></canvas>
@@ -352,6 +354,7 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 
 
 

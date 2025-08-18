@@ -1,38 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Cesium 3D Buildings from GeoJSON</title>
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Cesium.js"></script>
-  <link href="https://cesium.com/downloads/cesiumjs/releases/1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-  <style>
-    html, body, #cesiumContainer { width:100%; height:100%; margin:0; padding:0; }
-  </style>
-</head>
-<body>
-<div id="cesiumContainer"></div>
-<script>
-  const viewer = new Cesium.Viewer("cesiumContainer", {
-    terrainProvider: Cesium.createWorldTerrain()
-  });
-
-  Cesium.GeoJsonDataSource.load("Sector6.geojson").then((dataSource) => {
-    viewer.dataSources.add(dataSource);
-    viewer.zoomTo(dataSource);
-
-    const entities = dataSource.entities.values;
-    for (let entity of entities) {
-      if (entity.polygon) {
-        // Read height from properties (default 10m if missing)
-        let h = entity.properties.height ? entity.properties.height.getValue() : 10;
-
-        entity.polygon.extrudedHeight = h;     // 👈 makes it 3D
-        entity.polygon.material = Cesium.Color.SKYBLUE.withAlpha(0.6);
-        entity.polygon.outline = true;
-        entity.polygon.outlineColor = Cesium.Color.BLACK;
+  <head>
+    <meta charset="utf-8" />
+    <title>Cesium Viewer</title>
+    <script src="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Cesium.js"></script>
+    <link
+      href="https://cesium.com/downloads/cesiumjs/releases/1.115/Build/Cesium/Widgets/widgets.css"
+      rel="stylesheet"
+    />
+    <style>
+      html,
+      body,
+      #cesiumContainer {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
       }
-    }
-  });
-</script>
-</body>
+    </style>
+  </head>
+  <body>
+    <div id="cesiumContainer"></div>
+    <script>
+      // ✅ Create Cesium viewer with terrain
+      const viewer = new Cesium.Viewer("cesiumContainer", {
+        terrain: Cesium.Terrain.fromWorldTerrain(),
+      });
+
+      // ✅ Load your GeoJSON file (make sure it's in repo root as data.geojson)
+      Cesium.GeoJsonDataSource.load("Sector6.geojson", {
+        clampToGround: true,
+      })
+        .then(function (dataSource) {
+          viewer.dataSources.add(dataSource);
+          viewer.flyTo(dataSource); // zoom to data
+        })
+        .catch(function (error) {
+          console.error("Error loading GeoJSON:", error);
+        });
+    </script>
+  </body>
 </html>

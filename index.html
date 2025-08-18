@@ -14,7 +14,7 @@
   <script>
     // Viewer with terrain
     const viewer = new Cesium.Viewer("cesiumContainer", {
-      terrainProvider: Cesium.CesiumTerrainProvider.fromWorldTerrain()
+      terrainProvider: Cesium.createWorldTerrain()
     });
 
     // Load your exported GeoJSON

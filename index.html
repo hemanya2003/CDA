@@ -135,6 +135,24 @@ map.on('load', ()=>{
             'fill-extrusion-opacity':0
           }
         });
+
+        // ✅ Add Name label
+        map.addLayer({
+          id:'boundary-label',
+          type:'symbol',
+          source:'boundary',
+          layout:{
+            'text-field':['get','Name'],   // uses "Name" column from GeoJSON
+            'text-size':14,
+            'text-anchor':'center',
+            'text-offset':[0, 0]
+          },
+          paint:{
+            'text-color':'#000000',
+            'text-halo-color':'#ffffff',
+            'text-halo-width':2
+          }
+        });
     });
 });
 
@@ -330,3 +348,4 @@ function resetMapView(){
 </script>
 </body>
 </html>
+

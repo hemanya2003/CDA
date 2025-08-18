@@ -31,6 +31,7 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
 <div id="container">
   <div id="sidePanel">
     <h2 style="text-align:center; margin-bottom:30px;">🏢 CDA Dashboard</h2>
+
     <!-- Statistics -->
     <div class="panel-section">
       <div class="panel-title">📊 Statistics</div>
@@ -110,14 +111,15 @@ map.addControl(new maplibregl.NavigationControl());
 
 let allBuildings = [];
 let propertyChart, complianceChart;
-  // ✅ Load CDA Boundary
+
+// ✅ Load CDA Boundary
 map.on('load', ()=>{
   fetch('./CDA_Boundary.geojson')
     .then(res => res.json())
     .then(boundary => {
         map.addSource('boundary', { type:'geojson', data: boundary });
 
-        // Just boundary line (ground level)
+        // Just boundary line
         map.addLayer({
           id:'boundary-line',
           type:'line',
@@ -128,20 +130,19 @@ map.on('load', ()=>{
           }
         });
 
-        // Fake 3D wall effect using extrusion along boundary
+        // Fake 3D wall effect (only edges visible, transparent fill)
         map.addLayer({
           id:'boundary-wall',
           type:'fill-extrusion',
           source:'boundary',
           paint:{
             'fill-extrusion-color':'#FF6600',
-            'fill-extrusion-height':20,   // wall height
+            'fill-extrusion-height':20,
             'fill-extrusion-opacity':0
           }
         });
     });
 });
-
 
 // ✅ Load Buildings
 fetch('./Sector6Final1.geojson')
@@ -152,7 +153,7 @@ fetch('./Sector6Final1.geojson')
           f.properties.floors = parseInt(f.properties.floors || 1);
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
-          f.properties.compliance = f.properties.Compliance_Status || "NA";
+          f.properties.Compliance_Status = f.properties.Compliance_Status || "NA";
           return f;
       });
       map.on('load', ()=>{
@@ -183,7 +184,7 @@ fetch('./Sector6Final1.geojson')
                   <b>Owner:</b> ${p.Owner_Name || "NA"}<br/>
                   <b>Contact:</b> ${p.Contact_Nu || "NA"}<br/>
                   <b>Occupancy:</b> ${p.Occupancy_ || "NA"}<br/>
-                  <b>Compliance:</b> ${p.compliance || "NA"}
+                  <b>Compliance:</b> ${p.Compliance_Status || "NA"}
                 `).addTo(map);
           });
 
@@ -191,7 +192,6 @@ fetch('./Sector6Final1.geojson')
           map.on('mouseleave', 'buildings-layer', () => map.getCanvas().style.cursor = '');
       });
   });
-
 
 // ✅ Layer toggle
 document.getElementById('toggleBuildings').addEventListener('change', (e)=>{
@@ -202,7 +202,7 @@ document.getElementById('toggleBoundary').addEventListener('change', (e)=>{
   map.setLayoutProperty('boundary-wall','visibility', e.target.checked ? 'visible':'none');
 });
 
-// --- Existing functions (stats, charts, filters, highlight) unchanged ---
+// --- Statistics + Charts ---
 function updateStatistics(features){
     const heights = features.map(b=>b.properties.height);
     const total = features.length;
@@ -214,28 +214,52 @@ function updateStatistics(features){
     const totalArea = features.reduce((a,b)=>a+(b.properties.AREA||0),0);
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
 }
+
 function updateCharts(features){
-    const counts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
-    features.forEach(f=>{ if(counts[f.properties.Property_T]!==undefined){ counts[f.properties.Property_T]++; }});
+    // --- Property Type ---
+    const propertyCounts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
+    features.forEach(f=>{ if(propertyCounts[f.properties.Property_T]!==undefined){ propertyCounts[f.properties.Property_T]++; }});
+
     const ctx1 = document.getElementById('propertyChart').getContext('2d');
     if(propertyChart) propertyChart.destroy();
-    propertyChart = new Chart(ctx1, { type:'pie', data:{ labels:Object.keys(counts), datasets:[{ data:Object.values(counts), backgroundColor:['red','green','grey','brown','purple'] }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }}, plugins:[ChartDataLabels]});
+    propertyChart = new Chart(ctx1, {
+      type:'pie',
+      data:{
+        labels:Object.keys(propertyCounts),
+        datasets:[{ data:Object.values(propertyCounts), backgroundColor:['#36A2EB','#FF6384','#FFCE56','#4BC0C0','#9966FF'] }]
+      },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v }}},
+      plugins:[ChartDataLabels]
+    });
+
+    // --- Compliance Status ---
     let na=0, noRule=0, violations=0;
-    features.forEach(f=>{ if(f.properties.compliance==="Not Applicable"){ na++; } else if(f.properties.compliance==="No rule found"){ noRule++; } else { violations++; }});
+    features.forEach(f=>{
+      if(f.properties.Compliance_Status==="Not Applicable"){ na++; }
+      else if(f.properties.Compliance_Status==="No rule found"){ noRule++; }
+      else { violations++; }
+    });
+
     const ctx2 = document.getElementById('complianceChart').getContext('2d');
     if(complianceChart) complianceChart.destroy();
-    complianceChart = new Chart(ctx2, { type:'pie', data:{ labels:["Not Applicable","No Rule Found","Violations"], datasets:[{ data:[na,noRule,violations], backgroundColor:['green','yellow','red'] }] }, options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }}, plugins:[ChartDataLabels]});
+    complianceChart = new Chart(ctx2, {
+      type:'pie',
+      data:{
+        labels:["Not Applicable","No Rule Found","Violations"],
+        datasets:[{ data:[na,noRule,violations], backgroundColor:['green','yellow','red'] }]
+      },
+      options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v }}},
+      plugins:[ChartDataLabels]
+    });
 }
+
+// --- Other functions unchanged ---
 function applyFilters(){ /* unchanged */ }
 function resetFilters(){ /* unchanged */ }
 function highlightTallBuildings(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['>=',['get','height'],10],'orange','lightgray']); }
 function highlightByPropertyType(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['match',['get','Property_T'],'Commercial','red','Institutional','green','Vacant','grey','Residential','brown','Mixed Use','purple','lightgray']); }
-function highlightByCompliance(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['==',['get','compliance'],'Not Applicable'],'green',['==',['get','compliance'],'No rule found'],'yellow','red']); }
+function highlightByCompliance(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['==',['get','Compliance_Status'],'Not Applicable'],'green',['==',['get','Compliance_Status'],'No rule found'],'yellow','red']); }
 function resetMapView(){ map.flyTo({center:[85.854,20.466],zoom:17,pitch:60,bearing:-17}); map.setPaintProperty('buildings-layer','fill-extrusion-color',['interpolate',['linear'],['get','height'],3,'lightgray',6,'royalblue',9,'lightblue',12,'red']); }
 </script>
 </body>
 </html>
-
-
-
-

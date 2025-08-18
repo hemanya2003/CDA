@@ -171,15 +171,17 @@ function highlightTallBuildings(){
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',['>=',['get','height'],10],'orange','lightgray']);
 }
-function highlightByPropertyType(){
-    map.setPaintProperty('buildings-layer','fill-extrusion-color',
-      ['match',['get','Property_T'],
-        'Commercial','red',
-        'Institutional','green',
-        'Vacant','grey',
-        'Residential','brown',
-       'Mixed Use','purple',
-      ]);
+function highlightByPropertyType() {
+  map.setPaintProperty('buildings-layer', 'fill-extrusion-color',
+    ['match', ['get', 'Property_T'],
+      'Commercial', 'red',
+      'Institutional', 'green',
+      'Vacant', 'grey',
+      'Residential', 'brown',
+      'Mixed Use', 'purple',
+      /* fallback */ 'lightgray'
+    ]
+  );
 }
 function highlightByCompliance(){
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
@@ -199,3 +201,4 @@ function resetMapView(){
 </script>
 </body>
 </html>
+

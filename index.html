@@ -159,20 +159,38 @@ map.on('load', () => {
       map.moveLayer('boundary-label');
     });
 });
-// ✅ Popup for boundary polygon
-map.on('click', 'boundary', function (e) {
-  const feature = e.features[0];
+// Create a popup, but don't add it yet
+const boundaryPopup = new maplibregl.Popup({
+  closeButton: false,
+  closeOnClick: false
+});
+
+// Show popup on hover
+map.on('mousemove', function (e) {
+  const features = map.queryRenderedFeatures(e.point, {
+    layers: ['boundary']  // your polygon layer id
+  });
+
+  if (!features.length) {
+    boundaryPopup.remove();
+    return;
+  }
+
+  const feature = features[0];
   const props = feature.properties;
 
-  new maplibregl.Popup({ closeButton: true, closeOnClick: true })
+  boundaryPopup
     .setLngLat(e.lngLat)
     .setHTML(`<strong>${props.Name}</strong><br>Area: ${props.AREA}`)
     .addTo(map);
 });
 
-// Change cursor on hover
-map.on('mouseenter', 'boundary', () => map.getCanvas().style.cursor = 'pointer');
-map.on('mouseleave', 'boundary', () => map.getCanvas().style.cursor = '');
+// Optional: change cursor on hover
+map.on('mousemove', function (e) {
+  const features = map.queryRenderedFeatures(e.point, { layers: ['boundary'] });
+  map.getCanvas().style.cursor = features.length ? 'pointer' : '';
+});
+
 
 let allBuildings = [];
 let propertyChart, complianceChart;
@@ -366,6 +384,7 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 
 
 

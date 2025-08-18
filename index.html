@@ -21,6 +21,7 @@ button:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,0,0,0.3)
 .filter-controls { display:flex; gap:10px; }
 .filter-controls input { flex:1; }
 #stats { font-size:12px;}
+#infoBox { background:rgba(0,0,0,0.6); color:#fff; padding:10px; border-radius:8px; position:absolute; bottom:20px; left:20px; max-width:300px; display:none; }
 </style>
 </head>
 <body>
@@ -53,16 +54,13 @@ button:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,0,0,0.3)
     <div class="panel-section">
       <div class="panel-title">✅ Compliance</div>
       <div class="color-legend"><div class="color-box" style="background:gray;"></div>Not Applicable</div>
-      <div class="color-legend"><div class="color-box" style="background:green;"></div>Compliant</div>
-      <div class="color-legend"><div class="color-box" style="background:orange;"></div>Partial Compliance</div>
-      <div class="color-legend"><div class="color-box" style="background:red;"></div>Non-compliant</div>
+      <div class="color-legend"><div class="color-box" style="background:red;"></div>Violations</div>
     </div>
 
     <!-- Analysis -->
     <div class="panel-section">
       <div class="panel-title">📈 Quick Analysis</div>
       <button onclick="highlightTallBuildings()">🏗️ Show Tall Buildings</button>
-      <button onclick="highlightByPropertyType()">🏢 Group by Property Type</button>
       <button onclick="showFloodProne()">🌊 Flood Prone Areas</button>
       <button onclick="highlightByCompliance()">✅ Compliance Status</button>
       <button onclick="resetMapView()">🌍 Reset View</button>
@@ -70,6 +68,7 @@ button:hover { transform:translateY(-2px); box-shadow:0 4px 15px rgba(0,0,0,0.3)
   </div>
 
   <div id="map"></div>
+  <div id="infoBox"></div>
 </div>
 
 <script>
@@ -82,16 +81,27 @@ const map = new maplibregl.Map({
     bearing: -17,
     antialias: true
 });
-map.dragRotate.enable();
+
+// enable rotation using mouse wheel button (middle click)
+map.dragRotate.disable();
 map.touchZoomRotate.enableRotation();
 map.addControl(new maplibregl.NavigationControl());
+
+map.on('mousedown', (e) => {
+    if (e.originalEvent.button === 1) { // middle mouse
+        map.dragRotate.enable();
+    }
+});
+map.on('mouseup', () => {
+    map.dragRotate.disable();
+});
 
 let allBuildings = [];
 fetch('./Sector6Final1.geojson').then(res=>res.json()).then(data=>{
     allBuildings = data.features.map(f=>{
         f.properties.height = parseFloat(f.properties.height_m||f.properties.height||3);
-        f.properties.floors = parseInt(f.properties.floors||1);
         f.properties.compliance = f.properties.Compliance || "Not Applicable";
+        f.properties.Flood_Pron = f.properties.Flood_Pron || "No";
         return f;
     });
     map.on('load',()=>{
@@ -108,11 +118,22 @@ fetch('./Sector6Final1.geojson').then(res=>res.json()).then(data=>{
                     12,'red'
                 ],
                 'fill-extrusion-height':['*',['get','height'],1],
-                'fill-extrusion-base':0,
                 'fill-extrusion-opacity':0.9
             }
         });
         updateStatistics();
+
+        // click event to show building info
+        map.on('click','buildings-layer',(e)=>{
+            const props = e.features[0].properties;
+            document.getElementById('infoBox').style.display='block';
+            document.getElementById('infoBox').innerHTML = `
+                <b>Building Info</b><br/>
+                Height: ${props.height} m<br/>
+                Compliance: ${props.compliance}<br/>
+                Flood Prone: ${props.Flood_Pron}
+            `;
+        });
     });
 });
 
@@ -128,45 +149,46 @@ function updateStatistics(){
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
 }
 
-// Compliance Analysis
-function highlightByCompliance(){
-    const colorMap = {
-        "Not Applicable":"gray",
-        "Coverage 87.0% > 65%":"green",
-        "Coverage 87.0% > 65%; FSI 1.74 > 1.5":"green",
-        "Coverage 87.0% > 60%; FSI 2.61 > 1.5; Height 9m > 8m":"orange",
-        "Coverage 87.0% > 60%; FSI 1.74 > 1.5":"orange",
-        "Coverage 86.9% > 65%":"orange",
-        "Coverage 87.1% > 65%":"orange",
-        "Coverage 87.0% > 55%; FSI 3.48 > 1.75; Height 12m > 9m":"red",
-        "Coverage 86.8% > 65%":"orange",
-        "Coverage 87.2% > 65%":"green",
-        "Coverage 86.7% > 65%":"orange",
-        "No rule found":"gray",
-        "Coverage 87.0% > 50%; FSI 3.48 > 2.0":"red"
-    };
-    map.setPaintProperty('buildings-layer','fill-extrusion-color',['match',['get','compliance'],
-        "Not Applicable","gray",
-        "Coverage 87.0% > 65%","green",
-        "Coverage 87.0% > 65%; FSI 1.74 > 1.5","green",
-        "Coverage 87.0% > 60%; FSI 2.61 > 1.5; Height 9m > 8m","orange",
-        "Coverage 87.0% > 60%; FSI 1.74 > 1.5","orange",
-        "Coverage 86.9% > 65%","orange",
-        "Coverage 87.1% > 65%","orange",
-        "Coverage 87.0% > 55%; FSI 3.48 > 1.75; Height 12m > 9m","red",
-        "Coverage 86.8% > 65%","orange",
-        "Coverage 87.2% > 65%","green",
-        "Coverage 86.7% > 65%","orange",
-        "No rule found","gray",
-        "Coverage 87.0% > 50%; FSI 3.48 > 2.0","red",
-        "gray"
-    ]);
+// Show tall buildings
+function highlightTallBuildings(){ 
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['case',['>=',['get','height'],12],'red','lightgray']
+    ); 
 }
 
-// Additional analysis functions (tall buildings, property type, flood) can be added similarly
-function highlightTallBuildings(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['>=',['get','height'],12],'red','lightgray']); }
-function resetMapView(){ map.flyTo({center:[85.854,20.466],zoom:17,bearing:-17,pitch:60}); }
+// Show compliance
+function highlightByCompliance(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['match',['get','compliance'],
+            'Not Applicable','gray',
+            /* default */ 'red'
+        ]
+    );
+}
 
+// Show flood prone
+function showFloodProne(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['match',['get','Flood_Pron'],
+            'Yes','blue',
+            /* default */ 'gray'
+        ]
+    );
+}
+
+// Reset
+function resetMapView(){ 
+    map.flyTo({center:[85.854,20.466],zoom:17,bearing:-17,pitch:60});
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+        ['interpolate',['linear'],['get','height'],
+            3,'lightgray',
+            6,'royalblue',
+            9,'lightblue',
+            12,'red'
+        ]
+    );
+    document.getElementById('infoBox').style.display='none';
+}
 </script>
 </body>
 </html>

@@ -159,30 +159,20 @@ map.on('load', () => {
       map.moveLayer('boundary-label');
     });
 });
-// ✅ Popup on click
-const popup = new maplibregl.Popup({
-  closeButton: true,
-  closeOnClick: true
-});
+// ✅ Popup for boundary polygon
+map.on('click', 'boundary', function (e) {
+  const feature = e.features[0];
+  const props = feature.properties;
 
-map.on('click', 'boundary-fill', function (e) {
-  const props = e.features[0].properties;
-  popup
+  new maplibregl.Popup({ closeButton: true, closeOnClick: true })
     .setLngLat(e.lngLat)
-    .setHTML(`
-      <strong>${props.Name}</strong><br>
-      Area: ${props.AREA}
-    `)
+    .setHTML(`<strong>${props.Name}</strong><br>Area: ${props.AREA}`)
     .addTo(map);
 });
 
 // Change cursor on hover
-map.on('mouseenter', 'boundary-fill', function () {
-  map.getCanvas().style.cursor = 'pointer';
-});
-map.on('mouseleave', 'boundary-fill', function () {
-  map.getCanvas().style.cursor = '';
-});
+map.on('mouseenter', 'boundary', () => map.getCanvas().style.cursor = 'pointer');
+map.on('mouseleave', 'boundary', () => map.getCanvas().style.cursor = '');
 
 let allBuildings = [];
 let propertyChart, complianceChart;
@@ -376,6 +366,7 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 
 
 

@@ -197,9 +197,9 @@ function updateCharts(features){
     // --- Compliance ---
     let na=0, noRule=0, violations=0;
     features.forEach(f=>{
-        if(f.properties.compliance==="Not Applicable"){ 
+        if(f.properties.Compliance_Status==="Not Applicable"){ 
             na++; 
-        } else if(f.properties.compliance==="No rule found"){ 
+        } else if(f.properties.Compliance_Status==="No rule found"){ 
             noRule++; 
         } else { 
             violations++; 
@@ -292,8 +292,8 @@ function highlightByCompliance(){
     
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
-        ['==',['get','Compliance'],'Not Applicable'],'green',
-        ['==',['get','Compliance'],'No rule found'],'yellow',
+        ['==',['get','Compliance_Status'],'Not Applicable'],'green',
+        ['==',['get','Compliance_Status'],'No rule found'],'yellow',
         'red'
       ]);
 }
@@ -306,4 +306,5 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 

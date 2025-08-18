@@ -5,8 +5,9 @@
 <title>3D Building Dashboard - MapLibre + OSM</title>
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
-<!-- ✅ Chart.js added -->
+<!-- ✅ Chart.js + DataLabels plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
 html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
 #container { display: flex; width: 100%; height: 100%; }
@@ -41,7 +42,7 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
     <div class="panel-section">
       <div class="panel-title">🔍 Spatial Queries</div>
       <label>Property Type:</label>
-      <select id="propertyTypeFilter"><option value="">All Types</option><option>Commercial</option><option>Institutional</option><option>Vacant</option></select>
+      <select id="propertyTypeFilter"><option value="">All Types</option><option>Commercial</option><option>Institutional</option><option>Vacant</option><option>Residential</option><option>Mixed Use</option></select>
       <label>Building Use:</label>
       <select id="buildingUseFilter"><option value="">All Uses</option><option>House</option><option>Shop</option><option>Warehouse</option></select>
       <label>Height Range:</label>
@@ -104,7 +105,7 @@ fetch('./Sector6Final1.geojson')
           return f;
       });
       map.on('load', ()=>{
-          map.addSource('buildings', { type:'geojson', data:{ type:'FeatureCollection', features: allBuildings }});
+          map.addSource('buildings', { type:'geojson', data:{ type:'FeatureCollection', features: allBuildings }});          
           map.addLayer({
               id:'buildings-layer',
               type:'fill-extrusion',
@@ -118,8 +119,30 @@ fetch('./Sector6Final1.geojson')
                   'fill-extrusion-opacity':0.9
               }
           });
+
+          // ✅ Show stats & charts on load
           updateStatistics(allBuildings);
-          updateCharts(allBuildings); // ✅ show charts on load
+          updateCharts(allBuildings);
+
+          // ✅ Popup on click
+          map.on('click', 'buildings-layer', (e) => {
+              const p = e.features[0].properties;
+              new maplibregl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(`
+                  <b>Plot No:</b> ${p.Plot_No || "NA"}<br/>
+                  <b>Owner:</b> ${p.Owner_Name || "NA"}<br/>
+                  <b>Father/Husband:</b> ${p.Father_Hus || "NA"}<br/>
+                  <b>Contact:</b> ${p.Contact_Nu || "NA"}<br/>
+                  <b>Occupancy:</b> ${p.Occupancy_ || "NA"}<br/>
+                  <b>Compliance:</b> ${p.compliance || "NA"}
+                `)
+                .addTo(map);
+          });
+
+          // ✅ Change cursor on hover
+          map.on('mouseenter', 'buildings-layer', () => map.getCanvas().style.cursor = 'pointer');
+          map.on('mouseleave', 'buildings-layer', () => map.getCanvas().style.cursor = '');
       });
   });
 
@@ -149,7 +172,14 @@ function updateCharts(features){
         type:'pie',
         data:{ labels:Object.keys(counts), datasets:[{ data:Object.values(counts),
             backgroundColor:['red','green','grey','brown','purple'] }] },
-        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+        options:{ 
+          responsive:true, 
+          plugins:{ 
+            legend:{ position:'bottom' },
+            datalabels:{ color:'#000', formatter:(v,ctx)=>v } // ✅ show counts
+          } 
+        },
+        plugins:[ChartDataLabels]
     });
 
     // --- Compliance ---
@@ -162,8 +192,15 @@ function updateCharts(features){
     if(complianceChart) complianceChart.destroy();
     complianceChart = new Chart(ctx2, {
         type:'pie',
-        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['green','red'] }] },
-        options:{ responsive:true, plugins:{ legend:{ position:'bottom' } } }
+        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['blue','orange'] }] },
+        options:{ 
+          responsive:true, 
+          plugins:{ 
+            legend:{ position:'bottom' },
+            datalabels:{ color:'#000', formatter:(v)=>v } 
+          } 
+        },
+        plugins:[ChartDataLabels]
     });
 }
 
@@ -188,7 +225,7 @@ function applyFilters(){
 
     map.getSource('buildings').setData({type:'FeatureCollection',features:filtered});
     updateStatistics(filtered);
-    updateCharts(filtered); // ✅ update both charts
+    updateCharts(filtered); 
 }
 
 function resetFilters(){
@@ -199,7 +236,7 @@ function resetFilters(){
     document.getElementById('floorsFilter').value="";
     map.getSource('buildings').setData({type:'FeatureCollection',features:allBuildings});
     updateStatistics(allBuildings);
-    updateCharts(allBuildings); // ✅ reset both
+    updateCharts(allBuildings); 
 }
 
 function highlightTallBuildings(){
@@ -214,17 +251,17 @@ function highlightByPropertyType() {
       'Vacant', 'grey',
       'Residential', 'brown',
       'Mixed Use', 'purple',
-      /* fallback */ 'lightgray'
+      'lightgray'
     ]
   );
 }
 function highlightByCompliance(){
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['match',['get','compliance'],
-        'Not Applicable','green',
-        'Partial','red',
+        'Not Applicable','blue',
+        'Partial','orange',
         'Non-compliant','red',
-        /* else */ 'red'
+        'orange'
       ]);
 }
 function resetMapView(){

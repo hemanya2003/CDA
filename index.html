@@ -1,49 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Cesium 3D Buildings Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Cesium.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
-  <style>
-    html, body { 
-      width: 100%; 
-      height: 100%; 
-      margin: 0; 
-      padding: 0; 
-      font-family: Arial, sans-serif;
-    }
-    #container { display: flex; width: 100%; height: 100%; }
-    #sidePanel {
-      width: 350px;
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
-      box-shadow: 2px 0 10px rgba(0,0,0,0.3);
-    }
-    #cesiumContainer { flex: 1; height: 100%; }
-    .panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
-    .panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
-    .stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
-    .color-legend { display: flex; align-items: center; margin-bottom: 8px; }
-    .color-box { width: 20px; height: 20px; border-radius: 3px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.3); }
-    input, select, button { width: 100%; padding: 8px; margin-bottom: 10px; border: none; border-radius: 5px; font-size: 14px; }
-    button { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
-    button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-    .filter-controls { display: flex; gap: 10px; }
-    .filter-controls input { flex: 1; }
-    #stats { font-size: 12px; }
-  </style>
+<meta charset="utf-8">
+<title>Cesium 3D Buildings Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Cesium.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/cesium@1.117/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+<style>
+html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+#container { display: flex; width: 100%; height: 100%; }
+#sidePanel { width: 350px; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+#cesiumContainer { flex: 1; height: 100%; }
+.panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
+.panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; color: #fff; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
+.stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+.color-legend { display: flex; align-items: center; margin-bottom: 8px; }
+.color-box { width: 20px; height: 20px; border-radius: 3px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.3); }
+input, select, button { width: 100%; padding: 8px; margin-bottom: 10px; border: none; border-radius: 5px; font-size: 14px; }
+button { background: linear-gradient(45deg, #FF6B6B, #4ECDC4); color: white; cursor: pointer; font-weight: bold; transition: transform 0.2s; }
+button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+.filter-controls { display: flex; gap: 10px; }
+.filter-controls input { flex: 1; }
+#stats { font-size: 12px; }
+</style>
 </head>
 <body>
 <div id="container">
   <div id="sidePanel">
     <h2 style="text-align: center; margin-bottom: 30px; color: #fff;">🏢 Building Dashboard</h2>
 
-    <!-- Statistics Section -->
     <div class="panel-section">
       <div class="panel-title">📊 Statistics</div>
       <div id="stats">
@@ -54,16 +38,14 @@
       </div>
     </div>
 
-    <!-- Height Color Legend -->
     <div class="panel-section">
       <div class="panel-title">🎨 Height Color Code</div>
-      <div class="color-legend"><div class="color-box" style="background: #44ff44;"></div><span>3m</span></div>
-      <div class="color-legend"><div class="color-box" style="background: #ffff00;"></div><span>6m</span></div>
+      <div class="color-legend"><div class="color-box" style="background: #00ff00;"></div><span>3m</span></div>
+      <div class="color-legend"><div class="color-box" style="background: #ccff00;"></div><span>6m</span></div>
       <div class="color-legend"><div class="color-box" style="background: #ffaa00;"></div><span>9m</span></div>
       <div class="color-legend"><div class="color-box" style="background: #ff4444;"></div><span>12m+</span></div>
     </div>
 
-    <!-- Compliance Legend -->
     <div class="panel-section">
       <div class="panel-title">✅ Compliance Legend</div>
       <div class="color-legend"><div class="color-box" style="background: gray;"></div>Not Applicable</div>
@@ -72,7 +54,6 @@
       <div class="color-legend"><div class="color-box" style="background: red;"></div>Non-compliant</div>
     </div>
 
-    <!-- Filters Section -->
     <div class="panel-section">
       <div class="panel-title">🔍 Spatial Queries</div>
       <label>Property Type:</label>
@@ -105,7 +86,6 @@
       <button onclick="resetFilters()">🔄 Reset All</button>
     </div>
 
-    <!-- Analysis Section -->
     <div class="panel-section">
       <div class="panel-title">📈 Quick Analysis</div>
       <button onclick="highlightTallBuildings()">🏗️ Show Tall Buildings</button>
@@ -115,7 +95,6 @@
       <button onclick="resetView()">🌍 Reset View</button>
     </div>
 
-    <!-- Selected Building Info -->
     <div class="panel-section" id="selectedInfo" style="display: none;">
       <div class="panel-title">📋 Selected Building</div>
       <div id="buildingDetails"></div>
@@ -126,195 +105,39 @@
 </div>
 
 <script>
-  // Global variables
-  let viewer, dataSource, allBuildings = [], filteredBuildings = [];
+Cesium.Ion.defaultAccessToken = 'YOUR_ION_TOKEN_HERE';
 
-  // Cesium Ion token
-  Cesium.Ion.defaultAccessToken = 'YOUR_ION_TOKEN_HERE';
-
-  // ======= Height color function =======
-  function getColorByHeight(height) {
-    if (height >= 12) return Cesium.Color.RED;
-    if (height >= 9) return Cesium.Color.ORANGE;
-    if (height >= 6) return Cesium.Color.YELLOW;
-    if (height >= 3) return Cesium.Color.GREEN;
-    return Cesium.Color.BLUE;
-  }
-
-  function getColorByPropertyType(type) {
-    switch(type){
-      case 'Commercial': return Cesium.Color.fromCssColorString('#ff6b6b');
-      case 'Institutional': return Cesium.Color.fromCssColorString('#4ecdc4');
-      case 'Vacant': return Cesium.Color.fromCssColorString('#45b7d1');
-      default: return Cesium.Color.fromCssColorString('#96ceb4');
-    }
-  }
-
-  // Initialize Cesium with OpenStreetMap background
-  viewer = new Cesium.Viewer("cesiumContainer", {
-    imageryProvider: new Cesium.OpenStreetMapImageryProvider({ url : 'https://a.tile.openstreetmap.org/' }),
+// MapTiler base map
+viewer = new Cesium.Viewer('cesiumContainer', {
+    imageryProvider: new Cesium.UrlTemplateImageryProvider({
+        url: 'https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=6TYA91HhQPjMXU651wBM',
+        credit: 'MapTiler'
+    }),
     baseLayerPicker: false,
-    terrainProvider: Cesium.Terrain.fromWorldTerrain(),
+    terrainProvider: Cesium.createWorldTerrain(),
     timeline: false,
     animation: false
-  });
+});
 
-  // Load GeoJSON
-  Cesium.GeoJsonDataSource.load("./Sector6Final1.geojson").then(ds => {
-    dataSource = ds;
-    viewer.dataSources.add(ds);
-    viewer.zoomTo(ds);
-    processBuildings();
-    updateStatistics();
-    setupClickHandler();
-  }).catch(err => {
-    console.error(err); alert("Could not load GeoJSON.");
-  });
+// Globals
+let dataSource, allBuildings=[], filteredBuildings=[];
 
-  function processBuildings() {
-    const entities = dataSource.entities.values;
-    allBuildings = [];
-    entities.forEach(entity => {
-      if(entity.polygon){
-        const props = entity.properties;
-        const buildingData = {
-          entity: entity,
-          height: props.height_m ? props.height_m.getValue() : (props.height ? props.height.getValue() : 3),
-          propertyType: props.Property_T ? props.Property_T.getValue() : 'Unknown',
-          buildingUse: props.Building_U ? props.Building_U.getValue() : 'Unknown',
-          floors: props.floors ? props.floors.getValue() : 1,
-          area: props.AREA ? props.AREA.getValue() : 0,
-          plotNo: props.Plot_No ? props.Plot_No.getValue() : 'Unknown',
-          ownerName: props.Owner_Name ? props.Owner_Name.getValue() : 'Unknown',
-          floodProne: props.Flood_Pron ? props.Flood_Pron.getValue() : 'Unknown',
-          compliance: props.Compliance ? props.Compliance.getValue() : 'Not Applicable'
-        };
-        allBuildings.push(buildingData);
-        styleBuilding(entity, buildingData.height, 'height');
-      }
-    });
-    filteredBuildings = [...allBuildings];
-  }
+// Smooth gradient color based on height
+function getColorByHeight(height){
+    if(height<=3) return Cesium.Color.fromHsl(0.33,1,0.5); // Green
+    if(height<=6) return Cesium.Color.fromHsl(0.25,1,0.5); // Yellow-Green
+    if(height<=9) return Cesium.Color.fromHsl(0.13,1,0.5); // Orange
+    return Cesium.Color.fromHsl(0,1,0.5); // Red
+}
 
-  function styleBuilding(entity, height, colorMode='height') {
-    if(entity.polygon){
-      entity.polygon.extrudedHeight = height;
-      entity.polygon.material = colorMode==='height' ? getColorByHeight(height).withAlpha(0.8) :
-        getColorByPropertyType(entity.properties.Property_T ? entity.properties.Property_T.getValue() : 'Unknown').withAlpha(0.8);
-      entity.polygon.outline = true;
-      entity.polygon.outlineColor = Cesium.Color.BLACK;
-      entity.show = true;
+function getColorByPropertyType(type){
+    switch(type){
+        case 'Commercial': return Cesium.Color.fromCssColorString('#ff6b6b');
+        case 'Institutional': return Cesium.Color.fromCssColorString('#4ecdc4');
+        case 'Vacant': return Cesium.Color.fromCssColorString('#45b7d1');
+        default: return Cesium.Color.fromCssColorString('#96ceb4');
     }
-  }
+}
 
-  function updateStatistics() {
-    const totalBuildings = filteredBuildings.length;
-    const heights = filteredBuildings.map(b=>b.height);
-    const areas = filteredBuildings.map(b=>b.area);
-    const avgHeight = heights.length ? (heights.reduce((a,b)=>a+b,0)/heights.length).toFixed(1) : 0;
-    const maxHeight = heights.length ? Math.max(...heights) : 0;
-    const totalArea = areas.reduce((a,b)=>a+b,0).toFixed(1);
-    document.getElementById('totalBuildings').textContent = totalBuildings;
-    document.getElementById('avgHeight').textContent = avgHeight+'m';
-    document.getElementById('maxHeight').textContent = maxHeight+'m';
-    document.getElementById('totalArea').textContent = totalArea+' sq.m';
-  }
-
-  function applyFilters() {
-    const propertyType = document.getElementById('propertyTypeFilter').value;
-    const buildingUse = document.getElementById('buildingUseFilter').value;
-    const minHeight = parseFloat(document.getElementById('minHeight').value) || 0;
-    const maxHeight = parseFloat(document.getElementById('maxHeight').value) || 1000;
-    const floors = document.getElementById('floorsFilter').value;
-
-    allBuildings.forEach(b=>b.entity.show=false);
-    filteredBuildings = allBuildings.filter(b=>{
-      const matchesPropertyType = !propertyType || b.propertyType===propertyType;
-      const matchesBuildingUse = !buildingUse || b.buildingUse===buildingUse;
-      const matchesHeight = b.height>=minHeight && b.height<=maxHeight;
-      const matchesFloors = !floors || (floors==='1'&&b.floors===1)||(floors==='2'&&b.floors===2)||(floors==='3'&&b.floors>=3);
-      return matchesPropertyType && matchesBuildingUse && matchesHeight && matchesFloors;
-    });
-    filteredBuildings.forEach(b=>b.entity.show=true);
-    updateStatistics();
-  }
-
-  function resetFilters() {
-    document.getElementById('propertyTypeFilter').value='';
-    document.getElementById('buildingUseFilter').value='';
-    document.getElementById('minHeight').value='';
-    document.getElementById('maxHeight').value='';
-    document.getElementById('floorsFilter').value='';
-    filteredBuildings=[...allBuildings];
-    allBuildings.forEach(b=>styleBuilding(b.entity,b.height,'height'));
-    updateStatistics();
-  }
-
-  // ===== Analysis functions =====
-  function highlightTallBuildings() {
-    allBuildings.forEach(b=>{
-      if(b.height>=12){ b.entity.show=true; b.entity.polygon.material=Cesium.Color.RED.withAlpha(0.9); }
-      else b.entity.show=false;
-    });
-  }
-
-  function highlightByPropertyType() {
-    allBuildings.forEach(b=>styleBuilding(b.entity,b.height,'propertyType'));
-  }
-
-  function showFloodProne() {
-    allBuildings.forEach(b=>{
-      if(b.floodProne==='Yes'){ b.entity.show=true; b.entity.polygon.material=Cesium.Color.CYAN.withAlpha(0.9); }
-      else b.entity.show=false;
-    });
-  }
-
-  function highlightByCompliance() {
-    allBuildings.forEach(b=>{
-      let color;
-      switch(b.compliance){
-        case 'Not Applicable': color=Cesium.Color.GRAY; break;
-        case 'Coverage 87.0% > 65%':
-        case 'Coverage 87.0% > 60%; FSI 1.74 > 1.5':
-        case 'Coverage 87.1% > 65%':
-        case 'Coverage 86.9% > 65%': color=Cesium.Color.GREEN; break;
-        case 'Coverage 87.0% > 55%; FSI 3.48 > 1.75; Height 12m > 9m':
-        case 'Coverage 87.0% > 50%; FSI 3.48 > 2.0': color=Cesium.Color.ORANGE; break;
-        default: color=Cesium.Color.RED;
-      }
-      b.entity.show=true;
-      b.entity.polygon.material=color.withAlpha(0.8);
-    });
-  }
-
-  function resetView() { resetFilters(); viewer.zoomTo(dataSource); }
-
-  // ===== Click handler =====
-  function setupClickHandler() {
-    viewer.cesiumWidget.screenSpaceEventHandler.setInputAction(click=>{
-      const picked = viewer.scene.pick(click.position);
-      if(picked && picked.id){
-        const b = allBuildings.find(bb=>bb.entity===picked.id);
-        if(b) showBuildingDetails(b);
-      }
-    },Cesium.ScreenSpaceEventType.LEFT_CLICK);
-  }
-
-  function showBuildingDetails(b){
-    const details = `<div style="font-size:12px;">
-      <strong>Plot No:</strong> ${b.plotNo}<br>
-      <strong>Owner:</strong> ${b.ownerName}<br>
-      <strong>Height:</strong> ${b.height}m<br>
-      <strong>Floors:</strong> ${b.floors}<br>
-      <strong>Area:</strong> ${b.area} sq.m<br>
-      <strong>Property Type:</strong> ${b.propertyType}<br>
-      <strong>Building Use:</strong> ${b.buildingUse}<br>
-      <strong>Flood Prone:</strong> ${b.floodProne}<br>
-      <strong>Compliance:</strong> ${b.compliance}
-    </div>`;
-    document.getElementById('buildingDetails').innerHTML = details;
-    document.getElementById('selectedInfo').style.display='block';
-  }
-</script>
-</body>
-</html>
+// Load GeoJSON
+Cesium.GeoJsonDataSource

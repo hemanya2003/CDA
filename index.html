@@ -12,7 +12,10 @@
 <body>
   <div id="cesiumContainer"></div>
   <script>
-    // Utility: remove consecutive duplicate points
+    // ======= Cesium Ion Token =======
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJiN2NiMDczYy02NzBjLTRhNzAtOTg5My1kOTE3MWU3NDUwNjkiLCJpZCI6MjkwNjAxLCJpYXQiOjE3NDM2Njg4NDl9.wLaBVyYsUmsMOVD0lt40azw55-PmPcmAF3WFSiI1K_c';
+
+    // ======= Utility: remove consecutive duplicate points =======
     function removeDuplicatePoints(positions) {
       if (!positions || positions.length < 2) return positions;
       let unique = [positions[0]];
@@ -26,12 +29,12 @@
       return unique;
     }
 
-    // Initialize Cesium viewer with World Terrain
+    // ======= Initialize Cesium Viewer with World Terrain =======
     const viewer = new Cesium.Viewer("cesiumContainer", {
       terrainProvider: Cesium.createWorldTerrain()
     });
 
-    // Load GeoJSON
+    // ======= Load GeoJSON and handle polygons =======
     Cesium.GeoJsonDataSource.load("Sector6Final1.geojson").then((dataSource) => {
       viewer.dataSources.add(dataSource);
       viewer.zoomTo(dataSource);
@@ -42,7 +45,6 @@
           let h = entity.properties.height ? entity.properties.height.getValue() : 3;
 
           try {
-            // Get polygon positions
             let hierarchy = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now());
             let positions = removeDuplicatePoints(hierarchy.positions);
 

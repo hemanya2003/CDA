@@ -101,8 +101,19 @@ fetch('./Sector6Final1.geojson')
           f.properties.floors = parseInt(f.properties.floors || 1);
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
-          // ✅ Changed to use the actual field name from your data
-          f.properties.compliance = f.properties.Compliance || "NA";
+          
+          // ✅ Debug: Log the first feature to see actual field names
+          if(data.features.indexOf(f) === 0) {
+              console.log("First feature properties:", Object.keys(f.properties));
+              console.log("Looking for compliance field:", f.properties);
+          }
+          
+          // Try multiple possible field names
+          f.properties.compliance = f.properties.Compliance || 
+                                   f.properties.compliance || 
+                                   f.properties.COMPLIANCE ||
+                                   f.properties.Complianc ||  // in case it's truncated
+                                   "NA";
           return f;
       });
       map.on('load', ()=>{
@@ -250,8 +261,13 @@ function highlightByPropertyType() {
     ]
   );
 }
-// ✅ Fixed compliance highlighting function
+// ✅ Fixed compliance highlighting function with debugging
 function highlightByCompliance(){
+    // Debug: Check what values we actually have
+    const complianceValues = allBuildings.map(b => b.properties.compliance);
+    const uniqueValues = [...new Set(complianceValues)];
+    console.log("Unique compliance values found:", uniqueValues);
+    
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
         ['==',['get','compliance'],'Not Applicable'],'green',

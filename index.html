@@ -102,18 +102,8 @@ fetch('./Sector6Final1.geojson')
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
           
-          // ✅ Debug: Log the first feature to see actual field names
-          if(data.features.indexOf(f) === 0) {
-              console.log("First feature properties:", Object.keys(f.properties));
-              console.log("Looking for compliance field:", f.properties);
-          }
-          
-          // Try multiple possible field names
-          f.properties.compliance = f.properties.Compliance || 
-                                   f.properties.compliance || 
-                                   f.properties.COMPLIANCE ||
-                                   f.properties.Complianc ||  // in case it's truncated
-                                   "NA";
+          // ✅ Use the actual Compliance field from your data
+          f.properties.compliance = f.properties.Compliance || "NA";
           return f;
       });
       map.on('load', ()=>{
@@ -192,16 +182,27 @@ function updateCharts(features){
     });
 
     // --- Compliance ---
-    let na=0, others=0;
+    let na=0, noRule=0, violations=0;
     features.forEach(f=>{
-        if(f.properties.compliance==="Not Applicable"){ na++; }
-        else { others++; }
+        if(f.properties.compliance==="Not Applicable"){ 
+            na++; 
+        } else if(f.properties.compliance==="No rule found"){ 
+            noRule++; 
+        } else { 
+            violations++; 
+        }
     });
     const ctx2 = document.getElementById('complianceChart').getContext('2d');
     if(complianceChart) complianceChart.destroy();
     complianceChart = new Chart(ctx2, {
         type:'pie',
-        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['green','red'] }] },
+        data:{ 
+            labels:["Not Applicable","No Rule Found","Violations"], 
+            datasets:[{ 
+                data:[na,noRule,violations], 
+                backgroundColor:['green','yellow','red'] 
+            }] 
+        },
         options:{ 
           responsive:true, 
           plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
@@ -261,17 +262,13 @@ function highlightByPropertyType() {
     ]
   );
 }
-// ✅ Fixed compliance highlighting function with debugging
+// ✅ Fixed compliance highlighting function - Green for "Not Applicable", Red for all violations
 function highlightByCompliance(){
-    // Debug: Check what values we actually have
-    const complianceValues = allBuildings.map(b => b.properties.compliance);
-    const uniqueValues = [...new Set(complianceValues)];
-    console.log("Unique compliance values found:", uniqueValues);
-    
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
         ['==',['get','compliance'],'Not Applicable'],'green',
-        'red'
+        ['==',['get','compliance'],'No rule found'],'yellow',  // Optional: different color for "No rule found"
+        'red'  // All other values (violations) in red
       ]);
 }
 function resetMapView(){

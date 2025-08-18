@@ -107,52 +107,56 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl());
 // ✅ Load CDA Boundary
-map.on('load', ()=>{
+map.on('load', () => {
   fetch('./CDA_Boundary.geojson')
     .then(res => res.json())
     .then(boundary => {
-        map.addSource('boundary', { type:'geojson', data: boundary });
+      map.addSource('boundary', { type: 'geojson', data: boundary });
 
-        // Just boundary line (ground level)
-        map.addLayer({
-          id:'boundary-line',
-          type:'line',
-          source:'boundary',
-          paint:{
-            'line-color':'black',
-            'line-width':8
-          }
-        });
+      // Just boundary line
+      map.addLayer({
+        id: 'boundary-line',
+        type: 'line',
+        source: 'boundary',
+        paint: {
+          'line-color': '#FF6600',
+          'line-width': 4
+        }
+      });
 
-        // Fake 3D wall effect using extrusion along boundary
-        map.addLayer({
-          id:'boundary-wall',
-          type:'fill-extrusion',
-          source:'boundary',
-          paint:{
-            'fill-extrusion-color':'#FF6600',
-            'fill-extrusion-height':20,   // wall height
-            'fill-extrusion-opacity':0
-          }
-        });
+      // Fake 3D wall effect
+      map.addLayer({
+        id: 'boundary-wall',
+        type: 'fill-extrusion',
+        source: 'boundary',
+        paint: {
+          'fill-extrusion-color': '#FF6600',
+          'fill-extrusion-height': 20,   // wall height
+          'fill-extrusion-opacity': 0.6
+        }
+      });
 
-        // ✅ Add Name label
-        map.addLayer({
-          id:'boundary-label',
-          type:'symbol',
-          source:'boundary',
-          layout:{
-            'text-field':['get','Name'],   // uses "Name" column from GeoJSON
-            'text-size':14,
-            'text-anchor':'center',
-            'text-offset':[0, 0]
-          },
-          paint:{
-            'text-color':'#000000',
-            'text-halo-color':'#ffffff',
-            'text-halo-width':2
-          }
-        });
+      // ✅ Label for CDA boundary
+      map.addLayer({
+        id: 'boundary-label',
+        type: 'symbol',
+        source: 'boundary',
+        layout: {
+          'text-field': ['get', 'Name'],   // column name in your GeoJSON
+          'text-size': 16,
+          'text-anchor': 'center',
+          'text-allow-overlap': true,
+          'symbol-placement': 'point'
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 2
+        }
+      });
+
+      // ✅ Force label above everything else
+      map.moveLayer('boundary-label');
     });
 });
 
@@ -348,4 +352,5 @@ function resetMapView(){
 </script>
 </body>
 </html>
+
 

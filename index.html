@@ -5,6 +5,8 @@
 <title>3D Building Dashboard - MapLibre + OSM</title>
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<!-- ✅ Chart.js added -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
 #container { display: flex; width: 100%; height: 100%; }
@@ -37,7 +39,10 @@ button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.
         <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
         <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
       </div>
+      <!-- ✅ Pie chart added here -->
+      <canvas id="propertyChart" style="margin-top:15px; background:#fff; border-radius:8px; padding:10px;"></canvas>
     </div>
+
     <!-- Filters -->
     <div class="panel-section">
       <div class="panel-title">🔍 Spatial Queries</div>
@@ -91,6 +96,7 @@ const map = new maplibregl.Map({
 map.addControl(new maplibregl.NavigationControl());
 
 let allBuildings = [];
+let propertyChart; // ✅ chart instance
 
 fetch('./Sector6Final1.geojson')
   .then(res => res.json())
@@ -119,6 +125,7 @@ fetch('./Sector6Final1.geojson')
               }
           });
           updateStatistics(allBuildings);
+          updatePieChart(allBuildings); // ✅ show chart on load
       });
   });
 
@@ -132,6 +139,32 @@ function updateStatistics(features){
     document.getElementById('maxHeight').innerText = maxH+'m';
     const totalArea = features.reduce((a,b)=>a+(b.properties.AREA||0),0);
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
+}
+
+// ✅ Pie chart update function
+function updatePieChart(features){
+    const counts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
+    features.forEach(f=>{
+        const t = f.properties.Property_T;
+        if(counts[t]!==undefined){ counts[t]++; }
+    });
+
+    const ctx = document.getElementById('propertyChart').getContext('2d');
+    if(propertyChart) propertyChart.destroy(); // clear old chart
+    propertyChart = new Chart(ctx, {
+        type:'pie',
+        data:{
+            labels:Object.keys(counts),
+            datasets:[{
+                data:Object.values(counts),
+                backgroundColor:['red','green','grey','brown','purple']
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ position:'bottom', labels:{ color:'black' } } }
+        }
+    });
 }
 
 function applyFilters(){
@@ -155,6 +188,7 @@ function applyFilters(){
 
     map.getSource('buildings').setData({type:'FeatureCollection',features:filtered});
     updateStatistics(filtered);
+    updatePieChart(filtered); // ✅ update chart with filtered
 }
 
 function resetFilters(){
@@ -165,6 +199,7 @@ function resetFilters(){
     document.getElementById('floorsFilter').value="";
     map.getSource('buildings').setData({type:'FeatureCollection',features:allBuildings});
     updateStatistics(allBuildings);
+    updatePieChart(allBuildings); // ✅ reset chart
 }
 
 function highlightTallBuildings(){
@@ -201,4 +236,3 @@ function resetMapView(){
 </script>
 </body>
 </html>
-

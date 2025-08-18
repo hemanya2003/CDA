@@ -101,7 +101,8 @@ fetch('./Sector6Final1.geojson')
           f.properties.floors = parseInt(f.properties.floors || 1);
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
-          f.properties.compliance = f.properties.compliance || "NA";
+          // ✅ Changed to use the actual field name from your data
+          f.properties.compliance = f.properties.Compliance || "NA";
           return f;
       });
       map.on('load', ()=>{
@@ -189,7 +190,7 @@ function updateCharts(features){
     if(complianceChart) complianceChart.destroy();
     complianceChart = new Chart(ctx2, {
         type:'pie',
-        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['blue','orange'] }] },
+        data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['green','red'] }] },
         options:{ 
           responsive:true, 
           plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
@@ -249,11 +250,12 @@ function highlightByPropertyType() {
     ]
   );
 }
+// ✅ Fixed compliance highlighting function
 function highlightByCompliance(){
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
       ['case',
-        ['==',['get','Compliance'],'Not Applicable'],'blue',
-        'orange'
+        ['==',['get','compliance'],'Not Applicable'],'green',
+        'red'
       ]);
 }
 function resetMapView(){
@@ -265,4 +267,3 @@ function resetMapView(){
 </script>
 </body>
 </html>
-

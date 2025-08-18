@@ -12,7 +12,7 @@
 html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
 #container { display: flex; width: 100%; height: 100%; }
 #sidePanel { width: 350px; height: 100%; background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3);}
+  color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
 #map { flex: 1; height: 100%; }
 .panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
 .panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
@@ -33,7 +33,7 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
         <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
         <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
       </div>
-      <!-- ✅ Pie charts -->
+      <!-- ✅ Two pie charts stacked -->
       <canvas id="propertyChart"></canvas>
       <canvas id="complianceChart"></canvas>
     </div>
@@ -174,10 +174,7 @@ function updateCharts(features){
             backgroundColor:['red','green','grey','brown','purple'] }] },
         options:{ 
           responsive:true, 
-          plugins:{ 
-            legend:{ position:'bottom' },
-            datalabels:{ color:'#000', formatter:(v,ctx)=>v } // ✅ show counts
-          } 
+          plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
         },
         plugins:[ChartDataLabels]
     });
@@ -195,10 +192,7 @@ function updateCharts(features){
         data:{ labels:["Not Applicable","Others"], datasets:[{ data:[na,others], backgroundColor:['blue','orange'] }] },
         options:{ 
           responsive:true, 
-          plugins:{ 
-            legend:{ position:'bottom' },
-            datalabels:{ color:'#000', formatter:(v)=>v } 
-          } 
+          plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
         },
         plugins:[ChartDataLabels]
     });
@@ -257,10 +251,8 @@ function highlightByPropertyType() {
 }
 function highlightByCompliance(){
     map.setPaintProperty('buildings-layer','fill-extrusion-color',
-      ['match',['get','compliance'],
-        'Not Applicable','blue',
-        'Partial','orange',
-        'Non-compliant','red',
+      ['case',
+        ['==',['get','compliance'],'Not Applicable'],'blue',
         'orange'
       ]);
 }

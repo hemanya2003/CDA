@@ -192,37 +192,6 @@ fetch('./Sector6Final1.geojson')
       });
   });
 
-// ✅ Load CDA Boundary
-map.on('load', ()=>{
-  fetch('./CDA_Boundary.geojson')
-    .then(res => res.json())
-    .then(boundary => {
-        map.addSource('boundary', { type:'geojson', data: boundary });
-
-        // Outline
-        map.addLayer({
-          id:'boundary-line',
-          type:'line',
-          source:'boundary',
-          paint:{
-            'line-color':'#FF6600',
-            'line-width':4
-          }
-        });
-
-        // Wall-like extrusion (give boundary polygon height)
-        map.addLayer({
-          id:'boundary-wall',
-          type:'fill-extrusion',
-          source:'boundary',
-          paint:{
-            'fill-extrusion-color':'#FF9933',
-            'fill-extrusion-height':10,
-            'fill-extrusion-opacity':0.5
-          }
-        });
-    });
-});
 
 // ✅ Layer toggle
 document.getElementById('toggleBuildings').addEventListener('change', (e)=>{
@@ -266,4 +235,5 @@ function resetMapView(){ map.flyTo({center:[85.854,20.466],zoom:17,pitch:60,bear
 </script>
 </body>
 </html>
+
 

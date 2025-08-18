@@ -235,38 +235,6 @@ map.addControl(new maplibregl.NavigationControl());
 let allBuildings = [];
 let propertyChart, complianceChart;
 
-// Helper function to get compliance color
-function getComplianceColor(value) {
-    if (!value) return '#6c757d';
-    if (value === 'Not Applicable') return '#28a745'; // green - compliant
-    if (value === 'No rule found') return '#ffc107';   // yellow - no rule
-    return '#dc3545'; // red - violations
-}
-
-// Helper function to format compliance status for popup
-function formatComplianceStatus(status) {
-    if (!status) return 'Unknown';
-    if (status === 'Not Applicable') return '✅ Compliant';
-    if (status === 'No rule found') return '❓ No Rule Found';
-    
-    // Format violation details
-    const violations = [];
-    if (status.includes('Coverage')) {
-        const match = status.match(/Coverage ([\d.]+)% > ([\d.]+)%/);
-        if (match) violations.push(`Coverage: ${match[1]}% (max: ${match[2]}%)`);
-    }
-    if (status.includes('FSI')) {
-        const match = status.match(/FSI ([\d.]+) > ([\d.]+)/);
-        if (match) violations.push(`FSI: ${match[1]} (max: ${match[2]})`);
-    }
-    if (status.includes('Height')) {
-        const match = status.match(/Height ([\d.]+)m > ([\d.]+)m/);
-        if (match) violations.push(`Height: ${match[1]}m (max: ${match[2]}m)`);
-    }
-    
-    return violations.length > 0 ? '❌ ' + violations.join('<br/>   ') : '❌ Non-Compliant';
-}
-
 function showError(message) {
     const errorDiv = document.getElementById('errorMessage');
     errorDiv.textContent = message;
@@ -368,41 +336,18 @@ fetch('./Sector6Final1.geojson')
           // Popup on click
           map.on('click', 'buildings-layer', (e) => {
               const p = e.features[0].properties;
-              
-              // Debug: Log all property keys to find compliance field
-              console.log("Clicked building properties:", Object.keys(p));
-              console.log("Full properties object:", p);
-              
-              // Try to find compliance value from multiple possible fields
-              const complianceValue = p.Compliance_Status || 
-                                    p.compliance_status ||
-                                    p.Compliance || 
-                                    p.compliance || 
-                                    p.COMPLIANCE ||
-                                    p.Complianc ||
-                                    p.compliance_check ||
-                                    p.status ||
-                                    "Not Found";
-              
-              console.log("Compliance value found:", complianceValue);
-              
               new maplibregl.Popup()
                 .setLngLat(e.lngLat)
                 .setHTML(`
-                  <div style="font-family: Arial, sans-serif; font-size: 12px; line-height: 1.4;">
-                    <b>Plot No:</b> ${p.Plot_No || p.plot_no || "NA"}<br/>
-                    <b>Owner:</b> ${p.Owner_Name || p.owner_name || "NA"}<br/>
-                    <b>Father/Husband:</b> ${p.Father_Hus || p.father_husband || "NA"}<br/>
-                    <b>Contact:</b> ${p.Contact_Nu || p.contact_number || "NA"}<br/>
-                    <b>Occupancy:</b> ${p.Occupancy_ || p.occupancy || "NA"}<br/>
-                    <b>Property Type:</b> ${p.Property_T || p.property_type || "NA"}<br/>
-                    <b>Height:</b> ${p.height}m<br/>
-                    <b>Floors:</b> ${p.floors}<br/>
-                    <b>Area:</b> ${p.AREA || p.area || "NA"} sq.m<br/>
-                    <b>Compliance:</b> <span style="color: ${getComplianceColor(complianceValue)}; font-weight: bold;">${complianceValue}</span><br/>
-                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid #ccc;">
-                    <small style="color: #666;">Click building to see all available fields in console</small>
-                  </div>
+                  <b>Plot No:</b> ${p.Plot_No || "NA"}<br/>
+                  <b>Owner:</b> ${p.Owner_Name || "NA"}<br/>
+                  <b>Father/Husband:</b> ${p.Father_Hus || "NA"}<br/>
+                  <b>Contact:</b> ${p.Contact_Nu || "NA"}<br/>
+                  <b>Occupancy:</b> ${p.Occupancy_ || "NA"}<br/>
+                  <b>Property Type:</b> ${p.Property_T || "NA"}<br/>
+                  <b>Height:</b> ${p.height}m<br/>
+                  <b>Floors:</b> ${p.floors}<br/>
+                  <b>Compliance:</b> ${p.Compliance_Status || "NA"}
                 `)
                 .addTo(map);
           });
@@ -433,27 +378,6 @@ function updateStatistics(features) {
     
     const totalArea = features.reduce((a, b) => a + (parseFloat(b.properties.AREA) || 0), 0);
     document.getElementById('totalArea').innerText = totalArea.toFixed(1) + ' sq.m';
-}
-
-// Helper function to categorize compliance status
-function categorizeCompliance(status) {
-    if (!status) return 'Unknown';
-    if (status === 'Not Applicable') return 'Compliant';
-    if (status === 'No rule found') return 'No Rule Found';
-    // All other values are violations with specific details
-    return 'Non-Compliant';
-}
-
-// Helper function to get violation type
-function getViolationType(status) {
-    if (!status || status === 'Not Applicable' || status === 'No rule found') return null;
-    
-    const violations = [];
-    if (status.includes('Coverage')) violations.push('Coverage');
-    if (status.includes('FSI')) violations.push('FSI');
-    if (status.includes('Height')) violations.push('Height');
-    
-    return violations.length > 0 ? violations.join(' + ') : 'Other';
 }
 
 function updateCharts(features) {
@@ -519,21 +443,24 @@ function updateCharts(features) {
         plugins: [ChartDataLabels]
     });
 
-    // Compliance chart - simplified categories
+    // Compliance chart
     const complianceCounts = {
-        'Compliant': 0,           // Not Applicable
-        'Non-Compliant': 0,       // Any violations
-        'No Rule Found': 0,       // No rule found
+        'Not Applicable': 0,
+        'No rule found': 0,
+        'Violations': 0,
         'Unknown': 0
     };
     
     features.forEach(f => {
         const status = f.properties.Compliance_Status || 'Unknown';
-        const category = categorizeCompliance(status);
-        if (complianceCounts[category] !== undefined) {
-            complianceCounts[category]++;
-        } else {
+        if (status === 'Not Applicable') {
+            complianceCounts['Not Applicable']++;
+        } else if (status === 'No rule found') {
+            complianceCounts['No rule found']++;
+        } else if (status === 'Unknown') {
             complianceCounts['Unknown']++;
+        } else {
+            complianceCounts['Violations']++;
         }
     });
 
@@ -554,7 +481,7 @@ function updateCharts(features) {
             labels: Object.keys(filteredCompliance),
             datasets: [{
                 data: Object.values(filteredCompliance),
-                backgroundColor: ['#28a745', '#dc3545', '#ffc107', '#6c757d']
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d']
             }]
         },
         options: {
@@ -563,14 +490,14 @@ function updateCharts(features) {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Compliance Overview'
+                    text: 'Compliance Status'
                 },
                 legend: {
                     position: 'bottom',
                     labels: { boxWidth: 12, fontSize: 10 }
                 },
                 datalabels: {
-                    color: '#fff',
+                    color: '#000',
                     formatter: (value, context) => {
                         return value > 0 ? value : '';
                     }
@@ -579,102 +506,6 @@ function updateCharts(features) {
         },
         plugins: [ChartDataLabels]
     });
-
-    // Add a detailed violation types chart
-    createViolationTypesChart(features);
-}
-
-function createViolationTypesChart(features) {
-    // Create a third chart for violation types
-    const violationCounts = {
-        'Coverage Only': 0,
-        'FSI Only': 0,
-        'Height Only': 0,
-        'Coverage + FSI': 0,
-        'Coverage + Height': 0,
-        'FSI + Height': 0,
-        'All Three': 0
-    };
-    
-    features.forEach(f => {
-        const status = f.properties.Compliance_Status || '';
-        if (status !== 'Not Applicable' && status !== 'No rule found' && status !== 'Unknown') {
-            const hasCoverage = status.includes('Coverage');
-            const hasFSI = status.includes('FSI');
-            const hasHeight = status.includes('Height');
-            
-            if (hasCoverage && hasFSI && hasHeight) {
-                violationCounts['All Three']++;
-            } else if (hasCoverage && hasFSI) {
-                violationCounts['Coverage + FSI']++;
-            } else if (hasCoverage && hasHeight) {
-                violationCounts['Coverage + Height']++;
-            } else if (hasFSI && hasHeight) {
-                violationCounts['FSI + Height']++;
-            } else if (hasCoverage) {
-                violationCounts['Coverage Only']++;
-            } else if (hasFSI) {
-                violationCounts['FSI Only']++;
-            } else if (hasHeight) {
-                violationCounts['Height Only']++;
-            }
-        }
-    });
-
-    // Only show if there are violations
-    const hasViolations = Object.values(violationCounts).some(count => count > 0);
-    if (hasViolations) {
-        // Create canvas for violation types chart if it doesn't exist
-        let violationCanvas = document.getElementById('violationChart');
-        if (!violationCanvas) {
-            violationCanvas = document.createElement('canvas');
-            violationCanvas.id = 'violationChart';
-            violationCanvas.style.cssText = 'margin-top: 15px; background: #fff; border-radius: 8px; padding: 10px; width: 100% !important; height: 200px !important;';
-            document.getElementById('complianceChart').parentNode.appendChild(violationCanvas);
-        }
-
-        const filteredViolations = {};
-        Object.keys(violationCounts).forEach(key => {
-            if (violationCounts[key] > 0) {
-                filteredViolations[key] = violationCounts[key];
-            }
-        });
-
-        const ctx3 = violationCanvas.getContext('2d');
-        if (window.violationChart) window.violationChart.destroy();
-        
-        window.violationChart = new Chart(ctx3, {
-            type: 'doughnut',
-            data: {
-                labels: Object.keys(filteredViolations),
-                datasets: [{
-                    data: Object.values(filteredViolations),
-                    backgroundColor: ['#ff4757', '#ff6b7a', '#ff7675', '#fd79a8', '#fdcb6e', '#e17055', '#d63031']
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Violation Types'
-                    },
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 10, fontSize: 9 }
-                    },
-                    datalabels: {
-                        color: '#fff',
-                        formatter: (value, context) => {
-                            return value > 0 ? value : '';
-                        }
-                    }
-                }
-            },
-            plugins: [ChartDataLabels]
-        });
-    }
 }
 
 function applyFilters() {
@@ -773,3 +604,4 @@ function resetMapView() {
 </script>
 </body>
 </html>
+

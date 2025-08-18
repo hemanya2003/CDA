@@ -32,18 +32,16 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
 <body>
 <div id="container">
   <div id="sidePanel">
-    <h2 style="text-align:center; margin-bottom:30px;">🏢 CDA Dashboard</h2>
+    <h2 style="text-align:center; margin-bottom:30px;">🏢 Building Dashboard</h2>
     <!-- Statistics -->
- <div class="panel-section">
-  <div class="panel-title">📊 Building Types</div>
-  <div id="stats">
-    <div class="stat-item"><span>Commercial:</span><span id="statCommercial">0</span></div>
-    <div class="stat-item"><span>Institutional:</span><span id="statInstitutional">0</span></div>
-    <div class="stat-item"><span>Mixed Use:</span><span id="statMixed">0</span></div>
-    <div class="stat-item"><span>Residential:</span><span id="statResidential">0</span></div>
-    <div class="stat-item"><span>Vacant:</span><span id="statVacant">0</span></div>
-  </div>
-</div>
+    <div class="panel-section">
+      <div class="panel-title">📊 Statistics</div>
+      <div id="stats">
+        <div class="stat-item"><span>Total Buildings:</span><span id="totalBuildings">0</span></div>
+        <div class="stat-item"><span>Avg Height:</span><span id="avgHeight">0m</span></div>
+        <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
+        <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
+      </div>
       <!-- ✅ Two pie charts stacked -->
       <canvas id="propertyChart"></canvas>
       <canvas id="complianceChart"></canvas>
@@ -101,8 +99,8 @@ const map = new maplibregl.Map({
         },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
     },
-    center: [85.84, 20.477],
-    zoom: 20,
+    center: [85.854, 20.466],
+    zoom: 17,
     pitch: 60,
     bearing: -17,
     antialias: true
@@ -121,7 +119,7 @@ map.on('load', () => {
         type: 'line',
         source: 'boundary',
         paint: {
-          'line-color': 'black',
+          'line-color': 'brown',
           'line-width': 8
         }
       });
@@ -133,7 +131,7 @@ map.on('load', () => {
         source: 'boundary',
         paint: {
           'fill-extrusion-color': '#FF6600',
-          'fill-extrusion-height': 20,   // wall height
+          'fill-extrusion-height': 30,   // wall height
           'fill-extrusion-opacity': 0
         }
       });
@@ -145,14 +143,14 @@ map.on('load', () => {
         source: 'boundary',
         layout: {
           'text-field': ['get', 'Name'],   // column name in your GeoJSON
-          'text-size': 25,
+          'text-size': 30,
           'text-anchor': 'center',
           'text-allow-overlap': true,
           'symbol-placement': 'point'
         },
         paint: {
           'text-color': 'red',
-          'text-halo-color': 'red',
+          'text-halo-color': '#000000',
           'text-halo-width': 2
         }
       });
@@ -354,8 +352,3 @@ function resetMapView(){
 </script>
 </body>
 </html>
-
-
-
-
-

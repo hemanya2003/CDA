@@ -1,37 +1,38 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>3D Building Dashboard - MapLibre + OSM + Boundary</title>
+<title>3D Building Dashboard - MapLibre + OSM</title>
 <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet"/>
 <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+<!-- ✅ Chart.js + DataLabels plugin -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 <style>
 html, body { margin: 0; padding: 0; height: 100%; width: 100%; font-family: Arial, sans-serif; }
 #container { display: flex; width: 100%; height: 100%; }
 #sidePanel { width: 350px; height: 100%; background: linear-gradient(135deg, #667eea, #764ba2);
-  color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba(0,0,0,0.3); }
+  color: white; padding: 20px; box-sizing: border-box; overflow-y: auto; box-shadow: 2px 0 10px rgba
+
+(0,0,0,0.3); }
 #map { flex: 1; height: 100%; }
-.panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; backdrop-filter: blur(10px); }
-.panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
-.stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 5px; }
+.panel-section { margin-bottom: 25px; background: rgba(255,255,255,0.1); padding: 15px; border-
+
+radius: 10px; backdrop-filter: blur(10px); }
+.panel-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid rgba
+
+(255,255,255,0.3); padding-bottom: 8px; }
+.stat-item { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 8px; background: 
+
+rgba(255,255,255,0.1); border-radius: 5px; }
 canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
-/* ✅ Simple layer control */
-#layerControl {
-  margin-top: 10px;
-  background: rgba(255,255,255,0.2);
-  padding: 10px;
-  border-radius: 8px;
-}
-#layerControl label { display: block; margin: 5px 0; }
 </style>
 </head>
 <body>
 <div id="container">
   <div id="sidePanel">
-    <h2 style="text-align:center; margin-bottom:30px;">🏢 CDA Dashboard</h2>
-
+    <h2 style="text-align:center; margin-bottom:30px;">🏢 Building Dashboard</h2>
     <!-- Statistics -->
     <div class="panel-section">
       <div class="panel-title">📊 Statistics</div>
@@ -41,6 +42,7 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
         <div class="stat-item"><span>Max Height:</span><span id="maxHeight">0m</span></div>
         <div class="stat-item"><span>Total Area:</span><span id="totalArea">0 sq.m</span></div>
       </div>
+      <!-- ✅ Two pie charts stacked -->
       <canvas id="propertyChart"></canvas>
       <canvas id="complianceChart"></canvas>
     </div>
@@ -49,23 +51,27 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
     <div class="panel-section">
       <div class="panel-title">🔍 Spatial Queries</div>
       <label>Property Type:</label>
-      <select id="propertyTypeFilter">
-        <option value="">All Types</option><option>Commercial</option><option>Institutional</option>
-        <option>Vacant</option><option>Residential</option><option>Mixed Use</option>
-      </select>
+      <select id="propertyTypeFilter"><option value="">All 
+
+Types</option><option>Commercial</option><option>Institutional</option><option>Vacant</option><
+
+option>Residential</option><option>Mixed Use</option></select>
       <label>Building Use:</label>
-      <select id="buildingUseFilter"><option value="">All Uses</option><option>House</option><option>Shop</option><option>Warehouse</option></select>
+      <select id="buildingUseFilter"><option value="">All 
+
+Uses</option><option>House</option><option>Shop</option><option>Warehouse</option></select>
       <label>Height Range:</label>
       <div class="filter-controls">
         <input type="number" id="minHeight" placeholder="Min">
         <input type="number" id="maxHeight" placeholder="Max">
       </div>
       <label>Floor Count:</label>
-      <select id="floorsFilter"><option value="">All Floors</option><option value="1">1 Floor</option><option value="2">2 Floors</option><option value="3">3+ Floors</option></select>
+      <select id="floorsFilter"><option value="">All Floors</option><option value="1">1 
+
+Floor</option><option value="2">2 Floors</option><option value="3">3+ Floors</option></select>
       <button onclick="applyFilters()">🔎 Apply Filters</button>
       <button onclick="resetFilters()">🔄 Reset All</button>
     </div>
-
     <!-- Analysis -->
     <div class="panel-section">
       <div class="panel-title">📈 Quick Analysis</div>
@@ -74,15 +80,7 @@ canvas { margin-top:15px; background:#fff; border-radius:8px; padding:10px; }
       <button onclick="highlightByCompliance()">✅ Compliance Status</button>
       <button onclick="resetMapView()">🌍 Reset View</button>
     </div>
-
-    <!-- ✅ Layer Control -->
-    <div class="panel-section" id="layerControl">
-      <div class="panel-title">🗂️ Layers</div>
-      <label><input type="checkbox" id="toggleBuildings" checked> Buildings</label>
-      <label><input type="checkbox" id="toggleBoundary" checked> CDA Boundary</label>
-    </div>
   </div>
-
   <div id="map"></div>
 </div>
 
@@ -101,17 +99,13 @@ const map = new maplibregl.Map({
         },
         layers: [{ id: 'osm', type: 'raster', source: 'osm' }]
     },
-    center: [85.84, 20.478],
+    center: [85.854, 20.466],
     zoom: 17,
     pitch: 60,
     bearing: -17,
     antialias: true
 });
 map.addControl(new maplibregl.NavigationControl());
-
-let allBuildings = [];
-let propertyChart, complianceChart;
-
 // ✅ Load CDA Boundary
 map.on('load', ()=>{
   fetch('./CDA_Boundary.geojson')
@@ -119,7 +113,7 @@ map.on('load', ()=>{
     .then(boundary => {
         map.addSource('boundary', { type:'geojson', data: boundary });
 
-        // Just boundary line
+        // Just boundary line (ground level)
         map.addLayer({
           id:'boundary-line',
           type:'line',
@@ -130,21 +124,23 @@ map.on('load', ()=>{
           }
         });
 
-        // Fake 3D wall effect (only edges visible, transparent fill)
+        // Fake 3D wall effect using extrusion along boundary
         map.addLayer({
           id:'boundary-wall',
           type:'fill-extrusion',
           source:'boundary',
           paint:{
             'fill-extrusion-color':'#FF6600',
-            'fill-extrusion-height':20,
+            'fill-extrusion-height':20,   // wall height
             'fill-extrusion-opacity':0
           }
         });
     });
 });
 
-// ✅ Load Buildings
+let allBuildings = [];
+let propertyChart, complianceChart;
+
 fetch('./Sector6Final1.geojson')
   .then(res => res.json())
   .then(data => {
@@ -153,11 +149,15 @@ fetch('./Sector6Final1.geojson')
           f.properties.floors = parseInt(f.properties.floors || 1);
           f.properties.Property_T = f.properties.Property_T || "Unknown";
           f.properties.Building_U = f.properties.Building_U || "Unknown";
-          f.properties.Compliance_Status = f.properties.Compliance_Status || "NA";
+          
+          // ✅ Use the correct field name: Compliance_Status
+          f.properties.compliance = f.properties.Compliance_Status || "NA";
           return f;
       });
       map.on('load', ()=>{
-          map.addSource('buildings', { type:'geojson', data:{ type:'FeatureCollection', features: allBuildings }});
+          map.addSource('buildings', { type:'geojson', data:{ type:'FeatureCollection', features: allBuildings 
+
+}});          
           map.addLayer({
               id:'buildings-layer',
               type:'fill-extrusion',
@@ -172,9 +172,11 @@ fetch('./Sector6Final1.geojson')
               }
           });
 
+          // ✅ Show stats & charts on load
           updateStatistics(allBuildings);
           updateCharts(allBuildings);
 
+          // ✅ Popup on click
           map.on('click', 'buildings-layer', (e) => {
               const p = e.features[0].properties;
               new maplibregl.Popup()
@@ -182,27 +184,20 @@ fetch('./Sector6Final1.geojson')
                 .setHTML(`
                   <b>Plot No:</b> ${p.Plot_No || "NA"}<br/>
                   <b>Owner:</b> ${p.Owner_Name || "NA"}<br/>
+                  <b>Father/Husband:</b> ${p.Father_Hus || "NA"}<br/>
                   <b>Contact:</b> ${p.Contact_Nu || "NA"}<br/>
                   <b>Occupancy:</b> ${p.Occupancy_ || "NA"}<br/>
-                  <b>Compliance:</b> ${p.Compliance_Status || "NA"}
-                `).addTo(map);
+                  <b>Compliance:</b> ${p.compliance || "NA"}
+                `)
+                .addTo(map);
           });
 
+          // ✅ Change cursor on hover
           map.on('mouseenter', 'buildings-layer', () => map.getCanvas().style.cursor = 'pointer');
           map.on('mouseleave', 'buildings-layer', () => map.getCanvas().style.cursor = '');
       });
   });
 
-// ✅ Layer toggle
-document.getElementById('toggleBuildings').addEventListener('change', (e)=>{
-  map.setLayoutProperty('buildings-layer','visibility', e.target.checked ? 'visible':'none');
-});
-document.getElementById('toggleBoundary').addEventListener('change', (e)=>{
-  map.setLayoutProperty('boundary-line','visibility', e.target.checked ? 'visible':'none');
-  map.setLayoutProperty('boundary-wall','visibility', e.target.checked ? 'visible':'none');
-});
-
-// --- Statistics + Charts ---
 function updateStatistics(features){
     const heights = features.map(b=>b.properties.height);
     const total = features.length;
@@ -215,52 +210,123 @@ function updateStatistics(features){
     document.getElementById('totalArea').innerText = totalArea.toFixed(1)+' sq.m';
 }
 
+// ✅ Combined chart update
 function updateCharts(features){
-    // --- Property Type ---
-    const propertyCounts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
-    features.forEach(f=>{ if(propertyCounts[f.properties.Property_T]!==undefined){ propertyCounts[f.properties.Property_T]++; }});
-
+    // --- Property type ---
+    const counts = { Commercial:0, Institutional:0, Vacant:0, Residential:0, "Mixed Use":0 };
+    features.forEach(f=>{
+        const t = f.properties.Property_T;
+        if(counts[t]!==undefined){ counts[t]++; }
+    });
     const ctx1 = document.getElementById('propertyChart').getContext('2d');
     if(propertyChart) propertyChart.destroy();
     propertyChart = new Chart(ctx1, {
-      type:'pie',
-      data:{
-        labels:Object.keys(propertyCounts),
-        datasets:[{ data:Object.values(propertyCounts), backgroundColor:['#36A2EB','#FF6384','#FFCE56','#4BC0C0','#9966FF'] }]
-      },
-      options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v }}},
-      plugins:[ChartDataLabels]
+        type:'pie',
+        data:{ labels:Object.keys(counts), datasets:[{ data:Object.values(counts),
+            backgroundColor:['red','green','grey','brown','purple'] }] },
+        options:{ 
+          responsive:true, 
+          plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
+        },
+        plugins:[ChartDataLabels]
     });
 
-    // --- Compliance Status ---
+    // --- Compliance ---
     let na=0, noRule=0, violations=0;
     features.forEach(f=>{
-      if(f.properties.Compliance_Status==="Not Applicable"){ na++; }
-      else if(f.properties.Compliance_Status==="No rule found"){ noRule++; }
-      else { violations++; }
+        if(f.properties.compliance==="Not Applicable"){ 
+            na++; 
+        } else if(f.properties.compliance==="No rule found"){ 
+            noRule++; 
+        } else { 
+            violations++; 
+        }
     });
-
     const ctx2 = document.getElementById('complianceChart').getContext('2d');
     if(complianceChart) complianceChart.destroy();
     complianceChart = new Chart(ctx2, {
-      type:'pie',
-      data:{
-        labels:["Not Applicable","No Rule Found","Violations"],
-        datasets:[{ data:[na,noRule,violations], backgroundColor:['green','yellow','red'] }]
-      },
-      options:{ responsive:true, plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v }}},
-      plugins:[ChartDataLabels]
+        type:'pie',
+        data:{ 
+            labels:["Not Applicable","No Rule Found","Violations"], 
+            datasets:[{ 
+                data:[na,noRule,violations], 
+                backgroundColor:['green','yellow','red'] 
+            }] 
+        },
+        options:{ 
+          responsive:true, 
+          plugins:{ legend:{ position:'bottom' }, datalabels:{ color:'#000', formatter:(v)=>v } }
+        },
+        plugins:[ChartDataLabels]
     });
 }
 
-// --- Other functions unchanged ---
-function applyFilters(){ /* unchanged */ }
-function resetFilters(){ /* unchanged */ }
-function highlightTallBuildings(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['>=',['get','height'],10],'orange','lightgray']); }
-function highlightByPropertyType(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['match',['get','Property_T'],'Commercial','red','Institutional','green','Vacant','grey','Residential','brown','Mixed Use','purple','lightgray']); }
-function highlightByCompliance(){ map.setPaintProperty('buildings-layer','fill-extrusion-color',['case',['==',['get','Compliance_Status'],'Not Applicable'],'green',['==',['get','Compliance_Status'],'No rule found'],'yellow','red']); }
-function resetMapView(){ map.flyTo({center:[85.854,20.466],zoom:17,pitch:60,bearing:-17}); map.setPaintProperty('buildings-layer','fill-extrusion-color',['interpolate',['linear'],['get','height'],3,'lightgray',6,'royalblue',9,'lightblue',12,'red']); }
+function applyFilters(){
+    const type = document.getElementById('propertyTypeFilter').value;
+    const use = document.getElementById('buildingUseFilter').value;
+    const minH = parseFloat(document.getElementById('minHeight').value)||0;
+    const maxH = parseFloat(document.getElementById('maxHeight').value)||9999;
+    const floors = document.getElementById('floorsFilter').value;
+
+    const filtered = allBuildings.filter(b=>{
+        let ok=true;
+        if(type && b.properties.Property_T!==type) ok=false;
+        if(use && b.properties.Building_U!==use) ok=false;
+        if(!(b.properties.height>=minH && b.properties.height<=maxH)) ok=false;
+        if(floors){
+            if(floors==="3" && b.properties.floors<3) ok=false;
+            else if(floors!=="3" && b.properties.floors!=parseInt(floors)) ok=false;
+        }
+        return ok;
+    });
+
+    map.getSource('buildings').setData({type:'FeatureCollection',features:filtered});
+    updateStatistics(filtered);
+    updateCharts(filtered); 
+}
+
+function resetFilters(){
+    document.getElementById('propertyTypeFilter').value="";
+    document.getElementById('buildingUseFilter').value="";
+    document.getElementById('minHeight').value="";
+    document.getElementById('maxHeight').value="";
+    document.getElementById('floorsFilter').value="";
+    map.getSource('buildings').setData({type:'FeatureCollection',features:allBuildings});
+    updateStatistics(allBuildings);
+    updateCharts(allBuildings); 
+}
+
+function highlightTallBuildings(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+      ['case',['>=',['get','height'],10],'orange','lightgray']);
+}
+function highlightByPropertyType() {
+  map.setPaintProperty('buildings-layer', 'fill-extrusion-color',
+    ['match', ['get', 'Property_T'],
+      'Commercial', 'red',
+      'Institutional', 'green',
+      'Vacant', 'grey',
+      'Residential', 'brown',
+      'Mixed Use', 'purple',
+      'lightgray'
+    ]
+  );
+}
+// ✅ Fixed compliance highlighting function with correct field name
+function highlightByCompliance(){
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+      ['case',
+        ['==',['get','compliance'],'Not Applicable'],'green',
+        ['==',['get','compliance'],'No rule found'],'yellow',
+        'red'
+      ]);
+}
+function resetMapView(){
+    map.flyTo({center:[85.854,20.466],zoom:17,pitch:60,bearing:-17});
+    map.setPaintProperty('buildings-layer','fill-extrusion-color',
+      ['interpolate',['linear'],['get','height'],
+        3,'lightgray',6,'royalblue',9,'lightblue',12,'red']);
+}
 </script>
 </body>
 </html>
-
